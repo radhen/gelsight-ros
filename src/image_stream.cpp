@@ -1,6 +1,7 @@
-#include "ros/ros.h"
-
+#include <ros/ros.h>
 #include <image_transport/image_transport.h>
+#include <raspicam/raspicam_cv.h>
+#include <cv_bridge/cv_bridge.h>
 
 int main(int argc, char **argv)
 {
@@ -8,12 +9,24 @@ int main(int argc, char **argv)
 
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
-  image_transport::Publisher stream_pub = it.advertise("/camera/color/image_raw", 1);
+  image_transport::Publisher stream_pub = it.advertise("camera/color/image", 1);
 
+  raspicam::RaspiCam_Cv camera;
+  camera.set(CV_CAP_PROP_FORMAT, CV_8UC1);
+  if (!camera.open()) {
+    ROS_ERROR("Failed to open Gelsight camera");
+    return 1;
+  } 
+  
+  cv::Mat image;
   ros::Rate loop_rate(10);
   while (ros::ok())
   {
-    ROS_INFO("%s", msg.data.c_str());
+    camera.grab();
+    camera.retrieve(image);
+
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
+    stream_pub.publish(msg);
 
     ros::spinOnce();
     loop_rate.sleep();
