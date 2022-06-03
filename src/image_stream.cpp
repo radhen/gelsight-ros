@@ -74,7 +74,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     if (capture.read(raw_image)) { 
-      if (publish_raw) {
+      if (false) {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", raw_image).toImageMsg();
         raw_image_pub.publish(msg);
       }
@@ -87,10 +87,12 @@ int main(int argc, char **argv)
         rect_image_pub.publish(msg);
       }
 
+      continue;
+
       cv::cvtColor(rect_image, grayscale_image, cv::COLOR_BGR2GRAY);
       cv::adaptiveThreshold(grayscale_image, mask_image, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 21, 10);
 
-      if (publish_mask) {
+      if (false) {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask_image).toImageMsg();
         mask_image_pub.publish(msg);
       }
