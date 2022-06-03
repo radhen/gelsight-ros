@@ -1,0 +1,17 @@
+image_size:
+  width: 210
+  height: 270
+
+image_corners:
+  top_left:
+    x: 158
+    y: 134
+  top_right:
+    x: 505
+    y: 109
+  bottom_left:
+    x: 163
+    y: 356
+  bottom_right:
+    x: 506
+    y: 386
