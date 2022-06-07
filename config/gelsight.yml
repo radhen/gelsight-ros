@@ -1,6 +1,6 @@
 image_size:
-  width: 210
-  height: 270
+  width: 320
+  height: 240
 
 image_corners:
   top_left:

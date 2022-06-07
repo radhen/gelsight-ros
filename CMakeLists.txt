@@ -8,6 +8,7 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  rospy 
   roscpp
   image_transport
   cv_bridge
@@ -22,7 +23,7 @@ find_package(OpenCV REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -107,6 +108,7 @@ find_package(OpenCV REQUIRED)
 catkin_package(
   INCLUDE_DIRS
   CATKIN_DEPENDS roscpp
+                 rospy
                  image_transport
                  cv_bridge		 
 )

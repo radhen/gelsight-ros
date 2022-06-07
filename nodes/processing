@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import rospy
+from sensor_msgs.msg import Image
+import cv2
+from cv_bridge import CvBridge
+
+from gelsight import gsdevice
+from gelsight import gs3drecon
+from gelsightcore import poisson_reconstruct
+
+nn = gs3drecon.Reconstruction3D(gs3drecon.Finger.R15)
+nn.load_nn("/home/yu/Documents/catkin_ws/src/gelsight-ros/nnr15.pt", "cuda")
+
+vis3d = gs3drecon.Visualize3D(320, 240, '', 0.0887)
+
+bridge = CvBridge()
+
+def image_cb(msg):
+    frame = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+
+    dm = nn.get_depthmap(f1, MASK_MARKERS_FLAG)
+
+    vis3d.update(dm)
+
+
+
+if __name__ == "__main__":
+    rospy.init_node('gelsight_proc_node')
+    image_sub = rospy.Subscriber('/image/rectified', Image, image_cb, queue_size=1)
+    rospy.spin() 

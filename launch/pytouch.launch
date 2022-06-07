@@ -1,3 +1,4 @@
 <launch>
   <node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=/image/rectified raw out:=/test" />
+  <node name="pytouch" type="processing" pkg="gelsight-ros" />
 </launch>
