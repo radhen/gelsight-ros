@@ -1,0 +1,13 @@
+<launch>
+  <arg name="name" default="gelsight"/>
+
+  <group ns="$(arg name)">
+    <rosparam command="load" file="$(find gelsight-ros)/config/gelsight.yml"/>
+
+    <node name="republish" type="republish" pkg="image_transport" args="compressed in:=image/rectified raw out:repub/rectified" />
+
+    <node name="image_proc" type="image_proc.py" pkg="gelsight-ros">
+      <rosparam command="load" file="$(find gelsight-ros)/config/image_proc.yml"/>
+    </node>
+  </group>
+</launch>
