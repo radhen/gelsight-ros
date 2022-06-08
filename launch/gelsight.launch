@@ -6,14 +6,12 @@
   <arg name="publish_shear" default="true"/>
   <arg name="publish_depth" default="true"/>
 
-  <node name="gelsight" pkg="gelsight-ros" type="gelsight-ros_node" output="screen">
+  <node name="streamer" pkg="gelsight-ros" type="gelsight-ros_node" output="screen" ns="$(arg name)">
     <rosparam command="load" file="$(find gelsight-ros)/config/gelsight.yml"/>
 
-    <param name="name" value="$(arg name)"/>
     <param name="publish_raw" value="$(arg publish_raw)"/>
     <param name="publish_mask" value="$(arg publish_mask)"/>
     <param name="publish_markers" value="$(arg publish_markers)"/>
-    <param name="publish_shear" value="$(arg publish_shear)"/>
     <param name="publish_depth" value="$(arg publish_depth)"/>
   </node>
 </launch>
