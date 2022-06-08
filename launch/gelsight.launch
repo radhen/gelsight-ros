@@ -1,17 +1,11 @@
 <launch>
-  <arg name="name" default="gelsight"/> 
-  <arg name="publish_raw" default="true"/>
-  <arg name="publish_mask" default="true"/>
-  <arg name="publish_markers" default="true"/>
-  <arg name="publish_shear" default="true"/>
-  <arg name="publish_depth" default="true"/>
+  <arg name="rpi_ip"/>
+  <arg name="name" default="gelsight"/>
 
-  <node name="streamer" pkg="gelsight-ros" type="gelsight-ros_node" output="screen" ns="$(arg name)">
-    <rosparam command="load" file="$(find gelsight-ros)/config/gelsight.yml"/>
+  <group ns="$(arg name)">
+    <include file="$(find gelsight-ros)/launch/gelsight_proc.launch"/>
 
-    <param name="publish_raw" value="$(arg publish_raw)"/>
-    <param name="publish_mask" value="$(arg publish_mask)"/>
-    <param name="publish_markers" value="$(arg publish_markers)"/>
-    <param name="publish_depth" value="$(arg publish_depth)"/>
-  </node>
+    <machine name="mars-linux-3" address="$(arg rpi_ip)" env-loader="/home/ubuntu/env-loader" default="true" user="ubuntu"/>
+    <include file="$(find gelsight-ros)/launch/gelsight_stream.launch" />
+  </group>
 </launch>

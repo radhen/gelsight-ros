@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "streamer");
+  ros::init(argc, argv, "gelsight_stream");
 
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
