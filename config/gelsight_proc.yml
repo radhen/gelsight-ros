@@ -1,2 +1,2 @@
 nn_compute: 'cuda'
-
+cam_url: 'http://192.168.0.170:8080/?action=stream'

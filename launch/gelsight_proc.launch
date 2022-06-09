@@ -1,10 +1,13 @@
 <launch>
-  <node name="republish" type="republish" pkg="image_transport" args="compressed in:=image/rectified raw out:repub/rectified" />
+  <arg name="use_http" default="true" />
 
-  <node name="gelsight_proc" type="gelsight_proc.py" pkg="gelsight-ros">
+  <node if="$(arg use_http)" name="republish" type="republish" pkg="image_transport" args="compressed in:=image/rectified raw out:=repub/rectified" />
+
+  <node name="gelsight_proc" type="gelsight_proc.py" pkg="gelsight-ros" output="screen">
     <rosparam command="load" file="$(find gelsight-ros)/config/gelsight.yml"/>
     <rosparam command="load" file="$(find gelsight-ros)/config/gelsight_proc.yml"/>
 
+    <param name="use_http" value="$(arg use_http)"/>
     <param name="nn_path" value="$(find gelsight-ros)/data/nnr15.pt"/>
   </node>
 </launch>
