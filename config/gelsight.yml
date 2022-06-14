@@ -2,16 +2,10 @@ image_size:
   width: 480
   height: 640
 
-image_corners:
-  top_left:
-    x: 158
-    y: 134
-  top_right:
-    x: 505
-    y: 109
-  bottom_left:
-    x: 163
-    y: 356
+image_roi:
+  top_left: 
+    x: 60
+    y: 100
   bottom_right:
-    x: 506
-    y: 386
+    x: 375
+    y: 380
