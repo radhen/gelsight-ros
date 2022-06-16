@@ -10,6 +10,7 @@ import cv2
 from cv_bridge import CvBridge
 import numpy as np
 from numpy import linalg as LA
+from tf.transformations import quaternion_from_euler
 
 from gelsight import gsdevice
 from gelsight import gs3drecon
@@ -36,7 +37,11 @@ def depth2pcl(px, py, mmpp, dm):
     header = Header()
     return point_cloud2.create_cloud(header, fields, points)
 
-def depth2pca(pnts, frame_id):
+def depth2pca(dm, mmpp):
+    pnts = np.where(dm > 0)
+    X = pnts[1].reshape(-1, 1)
+    Y = pnts[0].reshape(-1, 1)
+    pnts = np.concatenate([X, Y], axis=1)
     pnts = pnts.reshape(-1, 2).astype(np.float64)
     mv = np.mean(pnts, 0).reshape(2, 1)
     pnts -= mv.T
@@ -46,17 +51,24 @@ def depth2pca(pnts, frame_id):
     col = np.where(w == w_max)[0]
     if len(col) > 1:
         col = col[-1]
+     
     V_max = v[:, col]
-    theta = math.atan(v_max[1], v_max[0]) / math.pi * 180.0
+    if V_max[0] > 0 and V_max[1] > 0:
+        V_max *= -1
+    
+    V_max = V_max.reshape(-1) * (w_max ** 0.3 / 1)
+    theta = math.atan2(V_max[1], V_max[0]) 
 
     pose = PoseStamped()
-    pose.pose.position.x = mv[0]
-    pose.pose.position.y = mv[1]
+    pose.pose.position.x = mv[0]*mmpp/100
+    pose.pose.position.y = mv[1]*mmpp/100
     pose.pose.position.z = 0.0 
-    pose.pose.orientation.x = math.cos(theta/2.0) + math.sin(theta/2.0)
-    pose.pose.orientation.y = math.sin(theta/2.0) - math.cos(theta/2.0)
-    pose.pose.orientation.z = math.cos(theta/2.0) + math.sin(theta/2.0)
-    pose.pose.orientation.w = math.cos(theta/2.0) - math.sin(theta/2.0)
+    
+    x, y, w, z = quaternion_from_euler(0.0, 0.0, theta)
+    pose.pose.orientation.x = x
+    pose.pose.orientation.y = y
+    pose.pose.orientation.z = w
+    pose.pose.orientation.w = z
     
     return pose
 
@@ -116,22 +128,25 @@ if __name__ == '__main__':
                 frame = last_frame.copy()
                 
                 dm = nn.get_depthmap(frame, False)
+
+                pcl = depth2pcl(120, 160, 0.04, dm)
+                pcl.header.frame_id = frame_id
+                pcl_pub.publish(pcl)
+                
                 dm *= -1
                 if init_dm is None:
                     init_dm = dm  
 		
                 dm = dm - init_dm 
+                dm = cv2.GaussianBlur(dm, (13, 13), 0)    
                 dm[dm < depth_min] = 0.0
                 dm[dm > depth_max] = 0.0
 
-                pose = depth2pca(dm)
+                pose = depth2pca(dm, 0.0887)
                 pose.header.frame_id = frame_id
                 contact_pub.publish(pose)
 
-                pcl = depth2pcl(120, 160, 0.0887, dm)
-                pcl.header.frame_id = frame_id
-                pcl_pub.publish(pcl)
-                grasp_pub.publish(Float32(get_grasp(dm, grasp_thresh)))
+                grasp_pub.publish(Float32(get_grasp_score(dm, grasp_thresh)))
                     
             rate.sleep()
         except rospy.ROSInterruptException:
