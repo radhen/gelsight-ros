@@ -1,5 +1,10 @@
-nn_compute: 'cuda'
-cam_url: 'http://192.168.0.170:8080/?action=stream'
+nn_compute: "cuda"
+nn_output_size:
+  width: 120
+  height: 160
+nn_mmpp: 0.0887
+
+cam_url: "http://192.168.0.170:8080/?action=stream"
 depth_thresh:
   max: 10.0
   min: 0.5

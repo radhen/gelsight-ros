@@ -11,6 +11,7 @@ from cv_bridge import CvBridge
 import numpy as np
 from numpy import linalg as LA
 
+
 from gelsight import gsdevice
 from gelsight import gs3drecon
 
@@ -21,10 +22,10 @@ def image_cb(msg):
     global last_frame
     last_frame = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
-def depth2pcl(px, py, mmpp, dm):
+def depth2pcl(width, length, mmpp, dm):
     points = []
-    for i in range(px):
-        for j in range(py):
+    for i in range(width):
+        for j in range(length):
             points.append((i*mmpp/100.0, j*mmpp/100.0, dm[j, i]/1000.0, int(0)))
 
 
@@ -36,7 +37,7 @@ def depth2pcl(px, py, mmpp, dm):
     header = Header()
     return point_cloud2.create_cloud(header, fields, points)
 
-def depth2pca(pnts, frame_id):
+def depth2pca(pnts, buffer):
     pnts = pnts.reshape(-1, 2).astype(np.float64)
     mv = np.mean(pnts, 0).reshape(2, 1)
     pnts -= mv.T
@@ -48,6 +49,14 @@ def depth2pca(pnts, frame_id):
         col = col[-1]
     V_max = v[:, col]
     theta = math.atan(v_max[1], v_max[0]) / math.pi * 180.0
+
+    buffer.pop() 
+    buffer.append((mv, theta))
+
+    x = 0.0
+    y = 0.0
+    theta = 0.0
+
 
     pose = PoseStamped()
     pose.pose.position.x = mv[0]
@@ -92,6 +101,9 @@ if __name__ == '__main__':
 
     nn_path = rospy.get_param('~nn_path')
     nn_compute = rospy.get_param('~nn_compute', 'gpu')
+    nn_output_width = rospy.get_param('~nn_output_size/width')
+    nn_output_length = rospy.get_param('~nn_output_size/height')
+    nn_mmpp = rospy.get_param('~nn_mmpp')
 
     pcl_pub = rospy.Publisher('/pcl', PointCloud2, queue_size=1)
     contact_pub = rospy.Publisher('/contact', PoseStamped)
@@ -128,7 +140,7 @@ if __name__ == '__main__':
                 pose.header.frame_id = frame_id
                 contact_pub.publish(pose)
 
-                pcl = depth2pcl(120, 160, 0.0887, dm)
+                pcl = depth2pcl(nn_output_width, nn_output_length, nn_mmpp, dm)
                 pcl.header.frame_id = frame_id
                 pcl_pub.publish(pcl)
                 grasp_pub.publish(Float32(get_grasp(dm, grasp_thresh)))
