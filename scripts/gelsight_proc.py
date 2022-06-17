@@ -2,19 +2,25 @@
 
 import rospy
 import math
+import cv2
+import numpy as np
+from numpy import linalg as LA
+from collections import deque
+from enum import Enum
+
 from std_msgs.msg import Header, Float32
 from sensor_msgs import point_cloud2
 from sensor_msgs.msg import Image, PointCloud2, PointField
 from geometry_msgs.msg import PoseStamped
-import cv2
-from cv_bridge import CvBridge
-import numpy as np
-from numpy import linalg as LA
 from tf.transformations import quaternion_from_euler
-from collections import deque
+from cv_bridge import CvBridge
 
 from gelsight import gsdevice
 from gelsight import gs3drecon
+
+class ThreshType(Enum):
+    GAUSSIAN = 1
+    EXPONENTIAL = 2
 
 last_frame = None
 bridge = CvBridge()
@@ -43,7 +49,10 @@ def depth2pca(dm, mmpp, buffer):
     X = pnts[1].reshape(-1, 1)
     Y = pnts[0].reshape(-1, 1)
     pnts = np.concatenate([X, Y], axis=1)
-    pnts = pnts.reshape(-1, 2).astype(np.float64)
+    pnts = pnts.reshape(-1, 2).astype(np.float64) 
+    if pnts.shape[0] == 0 :
+        return None
+    
     mv = np.mean(pnts, 0).reshape(2, 1)
     pnts -= mv.T
     w, v = LA.eig(np.dot(pnts.T, pnts))
@@ -60,7 +69,8 @@ def depth2pca(dm, mmpp, buffer):
     V_max = V_max.reshape(-1) * (w_max ** 0.3 / 1)
     theta = math.atan2(V_max[1], V_max[0]) 
 
-    buffer.popLeft() 
+    if len(buffer) > 0:
+        buffer.popleft() 
     buffer.append((mv[0], mv[1], theta))
 
     x_bar = 0.0
@@ -71,9 +81,11 @@ def depth2pca(dm, mmpp, buffer):
       x_bar += x
       y_bar += y
       theta_bar += theta
-    x_bar /= buffer.count()
-    y_bar /= buffer.count()
-    theta_bar /= buffer.count() 
+
+    if len(buffer) > 0:
+      x_bar /= len(buffer)
+      y_bar /= len(buffer)
+      theta_bar /= len(buffer) 
 
     pose = PoseStamped()
     pose.pose.position.x = x_bar*mmpp/100
@@ -87,6 +99,30 @@ def depth2pca(dm, mmpp, buffer):
     pose.pose.orientation.w = z
     
     return pose
+
+def get_2d_gaussian(n, m, sig):
+    x = np.linspace(-sig, sig, n)
+    x_gauss = np.exp(-0.5 * np.square(x) / np.square(sig))
+
+    y = np.linspace(-sig, sig, m)
+    y_gauss = np.exp(-0.5 * np.square(y) / np.square(sig))
+
+    return np.outer(x_gauss, y_gauss)
+
+def get_2d_exponential(n, m, beta):
+    x = np.linspace(0.0, beta, n//2) 
+    if n%2 == 0:
+        x = np.concatenate([x, np.linspace(beta, 0.0, n//2)])
+    else:
+        x = np.concatenate([x, np.linspace(beta, 0.0, (n//2)+1)])
+
+    y = np.linspace(0.0, beta, m//2) 
+    if m%2 == 0:
+        y = np.concatenate([y, np.linspace(beta, 0.0, m//2)])
+    else:
+        y = np.concatenate([y, np.linspace(beta, 0.0, (m//2)+1)])
+    
+    return np.outer(np.exp(x), np.exp(y))
 
 def get_grasp_score(dm, thresh):
     v = abs(np.amin(dm)) - thresh
@@ -114,9 +150,16 @@ if __name__ == '__main__':
            rospy.get_param('~image_roi/bottom_right/x'),
            rospy.get_param('~image_roi/bottom_right/y'))
 
-    grasp_thresh = rospy.get_param('~grasp_thresh', 4.7)
-    depth_max = rospy.get_param('~depth_thresh/max')
-    depth_min = rospy.get_param('~depth_thresh/min')
+    depth_thresh_type = rospy.get_param('~depth_thresh/type', None) 
+    gauss_params = rospy.get_param('~depth_thresh/gaussian', None)
+    exp_params = rospy.get_param('~depth_thresh/exponential', None)
+    if depth_thresh_type is not None:
+        if depth_thresh_type == "gaussian":
+            depth_thresh_type = ThreshType.GAUSSIAN
+        elif depth_thresh_type == "exponential":
+            depth_thresh_type = ThreshType.EXPONENTIAL
+        else:
+            rospy.logfatal(f'Depth thresh type not recognized: {depth_thresh_type}')
 
     nn_path = rospy.get_param('~nn_path')
     nn_compute = rospy.get_param('~nn_compute', 'gpu')
@@ -152,22 +195,36 @@ if __name__ == '__main__':
                 
                 dm = nn.get_depthmap(frame, False)
 
-                pcl = depth2pcl(nn_output_width, nn_output_length, nn_mmpp, dm)
-                pcl.header.frame_id = frame_id
-                pcl_pub.publish(pcl)
-                
                 dm *= -1
                 if init_dm is None:
                     init_dm = dm  
 
                 dm = dm - init_dm 
-                dm = cv2.GaussianBlur(dm, (gaussian_height, gaussian_width), 0)    
-                dm[dm < depth_min] = 0.0
-                dm[dm > depth_max] = 0.0
+
+                pcl = depth2pcl(nn_output_width, nn_output_length, nn_mmpp, dm)
+                pcl.header.frame_id = frame_id
+                pcl_pub.publish(pcl)
+
+                if depth_thresh_type is not None:
+                    if depth_thresh_type == ThreshType.GAUSSIAN:
+                        gauss = get_2d_gaussian(dm.shape[0], dm.shape[1], gauss_params['sig'])
+                        thresh = dm - gauss
+                        dm[thresh > gauss_params['max']] = 0.0
+                        dm[thresh < gauss_params['min']] = 0.0
+                    elif depth_thresh_type == ThreshType.EXPONENTIAL:
+                        exp = get_2d_exponential(dm.shape[0], dm.shape[1], exp_params['beta'])
+                        thresh = dm - exp
+                        dm[thresh > exp_params['max']] = 0.0
+                        dm[thresh < exp_params['min']] = 0.0
 
                 pose = depth2pca(dm, nn_mmpp, pca_buffer)
-                pose.header.frame_id = frame_id
-                contact_pub.publish(pose)
+                if pose is not None:
+                    pose.header.frame_id = frame_id
+                    contact_pub.publish(pose)
+
+                    grasp_pub.publish(Float32(1.0))
+                else:
+                    grasp_pub.publish(Float32(0.0))
 
             rate.sleep()
         except rospy.ROSInterruptException:
