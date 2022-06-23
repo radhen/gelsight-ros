@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(gelsight-ros)
+project(gelsight_ros)
 
 add_compile_options(-std=c++11)
 

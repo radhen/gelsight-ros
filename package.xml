@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gelsight-ros</name>
+  <name>gelsight_ros</name>
   <version>0.1.0</version>
-  <description>The gelsight-ros package</description>
+  <description>The gelsight_ros package</description>
 
   <maintainer email="mccarth@purdue.edu">Harrison McCarty</maintainer>
   <license>GPLv3</license>

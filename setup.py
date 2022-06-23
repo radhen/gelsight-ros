@@ -1,9 +1,8 @@
 from distutils.core import setup
 
 setup(
-    version='0.0.0',
+    version='0.1.0',
     scripts=['scripts'],
-    packages=['gelsight-ros'],
-    package_dir={'': 'src'}
+    packages=['gelsight_ros'],
 )
 
