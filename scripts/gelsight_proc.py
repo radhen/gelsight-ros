@@ -4,7 +4,6 @@ import rospy
 import math
 import cv2
 import numpy as np
-np.random.BitGenerator = np.random.bit_generator.BitGenerator
 from numpy import linalg as LA
 from collections import deque
 from enum import Enum

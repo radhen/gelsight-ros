@@ -22,3 +22,11 @@ If using method 1, launch `gelsight_proc.launch`.
 If using method 2, launch `gelsight.launch`.
 
 For supported topics, read source (specifically the `gelsight_proc.py` script).
+
+## Known Issues
+
+If you have a 3090, you will require a specific version of PyTorch:
+
+```
+python3.8 -m pip install torch==1.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
