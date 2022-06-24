@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   message_generation
+  pybind11_catkin 
 )
 
 find_package(OpenCV REQUIRED)
@@ -34,11 +35,13 @@ catkin_package(
                  rospy
                  image_transport
                  cv_bridge		 
+                 pybind11_catkin
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  include/
 )
 
 add_executable(gelsight_stream_node src/gelsight_stream.cpp)
@@ -46,4 +49,12 @@ add_executable(gelsight_stream_node src/gelsight_stream.cpp)
 target_link_libraries(gelsight_stream_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
+)
+
+catkin_install_python(PROGRAMS scripts/call_icp.py scripts/gelsight_proc.py scripts/vis_flow.py
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+pybind11_add_module(find_marker MODULE src/tracking_class.cpp)
+install(TARGETS find_marker
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

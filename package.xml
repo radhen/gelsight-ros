@@ -9,6 +9,7 @@
   
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
+  <depend>pybind11_catkin</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>image_transport</depend>

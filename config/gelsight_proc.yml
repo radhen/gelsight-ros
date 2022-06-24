@@ -12,6 +12,8 @@ gaussian_kernel:
   height: 0
 
 publish_markers: true
+n_markers: 10
+m_markers: 15
 
 depth_thresh:
   type: "exponential"

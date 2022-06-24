@@ -4,6 +4,7 @@ import rospy
 import math
 import cv2
 import numpy as np
+np.random.BitGenerator = np.random.bit_generator.BitGenerator
 from numpy import linalg as LA
 from collections import deque
 from enum import Enum
@@ -19,7 +20,7 @@ from gelsight_ros.msg import MarkerFlow
 from gelsight import gsdevice
 from gelsight import gs3drecon
 
-from gelsight_util import *
+from gelsight_ros.util import *
 
 
 class ThreshType(Enum):
@@ -74,6 +75,8 @@ if __name__ == "__main__":
     nn_mmpp = rospy.get_param("~nn_mmpp")
 
     publish_markers = rospy.get_param("~publish_markers", False)
+    n_markers = rospy.get_param("~n_markers")
+    m_markers = rospy.get_param("~m_markers")
 
     gaussian_width = rospy.get_param("~gaussian_kernel/width")
     gaussian_height = rospy.get_param("~gaussian_kernel/height")
@@ -111,7 +114,7 @@ if __name__ == "__main__":
                     if init_markers is None:
                         init_markers = image2markers(frame)
                     else:
-                        flow_msg = image2flow(init_markers, init_frame, frame)
+                        flow_msg = image2flow(init_markers, init_frame, frame, n_markers, m_markers)
                         marker_flow_pub.publish(flow_msg)
 
                 dm = nn.get_depthmap(frame, False)

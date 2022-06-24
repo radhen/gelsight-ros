@@ -2,23 +2,36 @@
 
 import cv2
 from scipy.signal import fftconvolve
+from scipy import ndimage
 from scipy.ndimage.filters import maximum_filter, minimum_filter
 from math import sqrt
 import numpy as np
+from sensor_msgs.msg import Image, PointCloud2, PointField
 from gelsight_ros.msg import MarkerFlow
 from geometry_msgs.msg import Vector3
+from std_msgs.msg import Header, Float32
+from geometry_msgs.msg import PoseStamped
+from tf.transformations import quaternion_from_euler
+from sensor_msgs import point_cloud2
+from numpy import linalg as LA
+import math
+from find_marker import Matching
 
 MARKER_INTENSITY_SCALE = 3
 MARKER_THRESHOLD = 255
-MARKER_TEMPLATE_SIZE = 20
-MARKER_TEMPLATE_RADIUS = 5
+MARKER_TEMPLATE_SIZE = 5
+MARKER_TEMPLATE_RADIUS = 3
 MARKER_NEIGHBORHOOD_SIZE = 20
-
+MATCHING_FPS = 10
+MATCHING_SCALE = 5
 
 def image2markers(image):
     # Mask markers
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    scaled = cv2.convertScaleAbs(gray, alpha=MARKER_INTENSITY_SCALE)
+    # mask = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 9, 25)
+
+    # Gelsight Example Approach 
+    scaled = cv2.convertScaleAbs(gray, alpha=MARKER_INTENSITY_SCALE, beta=0)
     mask = cv2.inRange(scaled, MARKER_THRESHOLD, MARKER_THRESHOLD)
 
     # Perform normalized cross-correlation with gaussian kernel
@@ -35,7 +48,7 @@ def image2markers(image):
     a[np.where(a < 0)] = 0
     t = np.sum(np.square(t))
     n_xcorr = n_xcorr / np.sqrt(a * t)
-    n_xcorr[np.where(np.logical_not(np.isfinite(a)))] = 0
+    n_xcorr[np.where(np.logical_not(np.isfinite(n_xcorr)))] = 0
 
     # Dilate image
     dilated = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
@@ -48,7 +61,7 @@ def image2markers(image):
     max = maximum_filter(mask, MARKER_NEIGHBORHOOD_SIZE)
     maxima = mask == max
     min = minimum_filter(mask, MARKER_NEIGHBORHOOD_SIZE)
-    diff = (max - min) > threshold
+    diff = (max - min) > 1
     maxima[diff == 0] = 0
 
     labeled, n = ndimage.label(maxima)
@@ -57,22 +70,22 @@ def image2markers(image):
     return xy
 
 
-def image2flow(init_markers, init_image, image):
-    pts, _, _ = cv2.calcOpticalFlowPyrLK(
-        init_image,
-        image,
-        init_markers.astype("float32"),
-        None,
-        winSize=(100, 100),
-        maxLevel=2,
-        criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 20, 2),
-        flags=0,
-    )
+def image2flow(markers, n, m, p0, dp):
+    match = Matching(m, n, MATCHING_FPS, p0[0], p0[1], dp[0], dp[1])
+
+    match.init(markers)
+    match.run()
+
+    Ox, Oy, Cx, Cy, _ = match.get_flow()
 
     flow_msg = MarkerFlow()
-    flow_msg.data = []
-    for pt in pts:
-        flow_msg.data.append(Vector3(x=pt[0], y=[1]))
+    flow_msg.n = n
+    flow_msg.m = m
+    for i in range(len(Ox)):
+        for j in range(len(Ox[i])):
+            x = K * (Cx[i][j] - Ox[i][j])
+            y = K * (Cy[i][j] - Ox[i][j])
+            flow_msg.data.append(Vector3(x=x, y=y))
 
     return flow_msg
 
