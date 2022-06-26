@@ -7,14 +7,14 @@ from gelsight_ros.util import image2markers
 from find_marker import Matching
 
 URL = "http://192.168.0.170:8080/?action=stream"
-ROI = (60, 90, 355, 390)
+ROI = (70, 100, 335, 390)
 N = 10
 M = 14
-FPS = 10
-x0 = 12
+FPS = 40
+x0 = 13
 y0 = 5
-dx = 11
-dy = 11
+dx = 10
+dy = 10
 
 if __name__ == "__main__":
     dev = gsdevice.Camera(gsdevice.Finger.R15, URL)
@@ -30,11 +30,11 @@ if __name__ == "__main__":
             if init_frame is None:
                 init_frame = frame
 
-            if init_markers is None:
-                init_markers = image2markers(frame) 
-                markers = init_markers
-            else:
-                markers = image2markers(frame)
+            # if init_markers is None:
+            #    init_markers = image2markers(frame) 
+            #    markers = init_markers
+            # else:
+            markers = image2markers(frame)
             
             match.init(markers)
             match.run()

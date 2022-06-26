@@ -110,11 +110,9 @@ if __name__ == "__main__":
                     init_frame = frame
 
                 if publish_markers:
-                    if init_markers is None:
-                        init_markers = image2markers(frame)
-                    else:
-                        flow_msg = image2flow(init_markers, init_frame, frame, n_markers, m_markers)
-                        marker_flow_pub.publish(flow_msg)
+                    markers = image2markers(frame)
+                    flow_msg = markers2flow(markers, n_markers, m_markers, (12, 5), (11, 11))
+                    marker_flow_pub.publish(flow_msg)
 
                 dm = nn.get_depthmap(frame, False)
 

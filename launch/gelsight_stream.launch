@@ -5,8 +5,8 @@
   <arg name="publish_shear" default="true"/>
   <arg name="publish_depth" default="true"/>
 
-  <node name="gelsight_stream" type="gelsight_stream_node" pkg="gelsight-ros">
-    <rosparam command="load" file="$(find gelsight-ros)/config/gelsight.yml"/>
+  <node name="gelsight_stream" type="gelsight_stream_node" pkg="gelsight_ros">
+    <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
 
     <param name="publish_raw" value="$(arg publish_raw)"/>
     <param name="publish_mask" value="$(arg publish_mask)"/>

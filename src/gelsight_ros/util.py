@@ -28,34 +28,34 @@ MATCHING_SCALE = 5
 def image2markers(image):
     # Mask markers
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # mask = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 9, 25)
+    mask = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 17, 25)
 
-    # Gelsight Example Approach 
-    scaled = cv2.convertScaleAbs(gray, alpha=MARKER_INTENSITY_SCALE, beta=0)
-    mask = cv2.inRange(scaled, MARKER_THRESHOLD, MARKER_THRESHOLD)
+    # # Gelsight Example Approach 
+    # scaled = cv2.convertScaleAbs(gray, alpha=MARKER_INTENSITY_SCALE, beta=0)
+    # mask = cv2.inRange(scaled, MARKER_THRESHOLD, MARKER_THRESHOLD)
 
-    # Perform normalized cross-correlation with gaussian kernel
-    # See https://github.com/gelsightinc/gsrobotics/blob/main/examples/markertracking.py
-    t = get_2d_gaussian(
-        MARKER_TEMPLATE_SIZE, MARKER_TEMPLATE_SIZE, MARKER_TEMPLATE_RADIUS
-    )
-    t = t - np.mean(t)
-    a = mask - np.mean(mask)
-    n_xcorr = fftconvolve(a, np.flipud(np.fliplr(t)).conj(), mode="same")
-    a = fftconvolve(np.square(a), np.ones(t.shape), mode="same") - np.square(
-        fftconvolve(a, np.ones(t.shape), mode="same") / np.prod(t.shape)
-    )
-    a[np.where(a < 0)] = 0
-    t = np.sum(np.square(t))
-    n_xcorr = n_xcorr / np.sqrt(a * t)
-    n_xcorr[np.where(np.logical_not(np.isfinite(n_xcorr)))] = 0
+    # # Perform normalized cross-correlation with gaussian kernel
+    # # See https://github.com/gelsightinc/gsrobotics/blob/main/examples/markertracking.py
+    # t = get_2d_gaussian(
+    #     MARKER_TEMPLATE_SIZE, MARKER_TEMPLATE_SIZE, MARKER_TEMPLATE_RADIUS
+    # )
+    # t = t - np.mean(t)
+    # a = mask - np.mean(mask)
+    # n_xcorr = fftconvolve(a, np.flipud(np.fliplr(t)).conj(), mode="same")
+    # a = fftconvolve(np.square(a), np.ones(t.shape), mode="same") - np.square(
+    #     fftconvolve(a, np.ones(t.shape), mode="same") / np.prod(t.shape)
+    # )
+    # a[np.where(a < 0)] = 0
+    # t = np.sum(np.square(t))
+    # n_xcorr = n_xcorr / np.sqrt(a * t)
+    # n_xcorr[np.where(np.logical_not(np.isfinite(n_xcorr)))] = 0
 
-    # Dilate image
-    dilated = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
-    b = 2 * ((n_xcorr - n_xcorr.min()) / (n_xcorr.max() - n_xcorr.min())) - 1
-    b = (b - b.min()) / (b.max() - b.min())
-    mask = np.asarray(b < 0.5)
-    mask = (mask * 255).astype("uint8")
+    # # Dilate image
+    # dilated = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
+    # b = 2 * ((n_xcorr - n_xcorr.min()) / (n_xcorr.max() - n_xcorr.min())) - 1
+    # b = (b - b.min()) / (b.max() - b.min())
+    # mask = np.asarray(b < 0.5)
+    # mask = (mask * 255).astype("uint8")
 
     # Find peaks
     max = maximum_filter(mask, MARKER_NEIGHBORHOOD_SIZE)
@@ -70,7 +70,7 @@ def image2markers(image):
     return xy
 
 
-def image2flow(markers, n, m, p0, dp):
+def markers2flow(markers, n, m, p0, dp):
     match = Matching(m, n, MATCHING_FPS, p0[0], p0[1], dp[0], dp[1])
 
     match.init(markers)
@@ -83,8 +83,8 @@ def image2flow(markers, n, m, p0, dp):
     flow_msg.m = m
     for i in range(len(Ox)):
         for j in range(len(Ox[i])):
-            x = K * (Cx[i][j] - Ox[i][j])
-            y = K * (Cy[i][j] - Ox[i][j])
+            x = MATCHING_SCALE * (Cx[i][j] - Ox[i][j])
+            y = MATCHING_SCALE * (Cy[i][j] - Ox[i][j])
             flow_msg.data.append(Vector3(x=x, y=y))
 
     return flow_msg
@@ -151,6 +151,9 @@ def depth2pca(dm, mmpp, buffer):
         x_bar /= len(buffer)
         y_bar /= len(buffer)
         theta_bar /= len(buffer)
+
+    x_bar = (len(dm)//2) - x_bar
+    y_bar = (len(dm)//2) - y_bar
 
     pose = PoseStamped()
     pose.pose.position.x = x_bar * mmpp / 100
