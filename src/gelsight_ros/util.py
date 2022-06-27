@@ -95,7 +95,7 @@ def depth2pcl(width, length, mmpp, dm):
     for i in range(width):
         for j in range(length):
             points.append(
-                (i * mmpp / 100.0, j * mmpp / 100.0, dm[j, i] / 1000.0, int(0))
+                ((i - (dm.shape[1]//2)) * mmpp / 100.0, (j - (dm.shape[0]//2)) * mmpp / 100.0, dm[j, i] / 1000.0, int(0))
             )
 
     fields = [
@@ -152,8 +152,8 @@ def depth2pca(dm, mmpp, buffer):
         y_bar /= len(buffer)
         theta_bar /= len(buffer)
 
-    x_bar = (len(dm)//2) - x_bar
-    y_bar = (len(dm)//2) - y_bar
+    x_bar = x_bar - (dm.shape[0]//2)
+    y_bar = y_bar - (dm.shape[1]//2)
 
     pose = PoseStamped()
     pose.pose.position.x = x_bar * mmpp / 100
