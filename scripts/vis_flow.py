@@ -7,7 +7,7 @@ from gelsight_ros.util import image2markers
 from find_marker import Matching
 
 URL = "http://192.168.0.170:8080/?action=stream"
-ROI = (70, 100, 335, 390)
+ROI = (70, 95, 335, 390)
 N = 10
 M = 14
 FPS = 40
