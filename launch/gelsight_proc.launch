@@ -1,5 +1,6 @@
 <launch>
   <arg name="use_http" default="true" />
+  <arg name="cam_url" default="http://192.168.0.170:8080/?action=stream" />
 
   <node if="$(arg use_http)" name="republish" type="republish" pkg="image_transport" args="compressed in:=image/rectified raw out:=repub/rectified" />
 
@@ -7,6 +8,7 @@
     <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
     <rosparam command="load" file="$(find gelsight_ros)/config/gelsight_proc.yml"/>
 
+    <param name="cam_url" value="$(arg cam_url" />
     <param name="use_http" value="$(arg use_http)"/>
     <param name="nn_path" value="$(find gelsight_ros)/data/nnr15.pt"/>
   </node>

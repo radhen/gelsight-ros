@@ -1,5 +1,3 @@
-cam_url: "http://192.168.0.170:8080/?action=stream"
-
 nn_compute: "cuda"
 nn_output_size:
   width: 120
@@ -11,7 +9,7 @@ gaussian_kernel:
   width: 0
   height: 0
 
-publish_markers: true
+publish_markers: false
 n_markers: 10
 m_markers: 14
 

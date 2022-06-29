@@ -56,5 +56,6 @@ catkin_install_python(PROGRAMS scripts/call_icp.py scripts/gelsight_proc.py scri
 
 pybind11_add_module(find_marker MODULE src/tracking_class.cpp)
 install(TARGETS find_marker
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}
+  	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
