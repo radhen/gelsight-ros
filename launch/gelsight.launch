@@ -1,11 +1,7 @@
 <launch>
-  <arg name="rpi_ip"/>
-  <arg name="name" default="gelsight"/>
+  <node name="gelsight" type="gelsight.py" pkg="gelsight_ros" output="screen">
+    <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
 
-  <group ns="$(arg name)">
-    <include file="$(find gelsight-ros)/launch/gelsight_proc.launch"/>
-
-    <machine name="mars-linux-3" address="$(arg rpi_ip)" env-loader="~/env-loader.bash" default="true" user="ubuntu"/>
-    <include file="$(find gelsight-ros)/launch/gelsight_stream.launch" />
-  </group>
+    <param name="nn_path" value="$(find gelsight_ros)/data/nnr15.pt"/>
+  </node>
 </launch>

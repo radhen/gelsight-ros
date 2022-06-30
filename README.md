@@ -4,24 +4,27 @@ This package provides an interface for using GelSight sensors in ROS.
 
 As of right now, only R1.5 is supported.
 
-## Dependencies
+## Setup / Installation
 
-The [GelSight SDK](https://github.com/gelsightinc/gsrobotics) is required to run this package.
+> \>= Python 3.8 is required to use the following script
+
+To collect the required Gelsight depedencies, you can run the installation script:
+
+```bash
+./install_gelsight.sh
+```
+
+You then should be able to build as normal.
 
 ## Usage
 
-Before running this package, you have to configure the sensor stream. There are two ways you can do this:
+Before running this package, you have to configure the sensor stream. For R1.5, it's recommend you use the [mjpeg_streamer](https://github.com/jacksonliam/mjpg-streamer) service on the raspberry pi and set `http_stream/url` in `gelsight.yml`.
 
-1. Run the [mjpeg_streamer](https://github.com/jacksonliam/mjpg-streamer) service on the raspberry pi and set `cam_url` in `gelsight.yml`.
-2. Install ROS on the raspberry pi and connect it to your host machine.
+Modify additional parameters as needed, then launch:
 
-> The 1st recommended as support for changing raspicam parameters using OpenCV's VideoCapture class is limited. This may change in the future.
-
-If using method 1, launch `gelsight_proc.launch`.
-
-If using method 2, launch `gelsight.launch`.
-
-For supported topics, read source (specifically the `gelsight_proc.py` script).
+```bash
+roslaunch gelsight_ros gelsight.launch
+```
 
 ## Known Issues
 
@@ -30,3 +33,7 @@ If you have a 3090, you will require a specific version of PyTorch:
 ```
 python3.8 -m pip install torch==1.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ```
+
+## References
+
+Please check the official [GelSight SDK](https://github.com/gelsightinc/gsrobotics) for more information.

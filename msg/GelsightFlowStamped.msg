@@ -1,0 +1,3 @@
+std_msgs/Header header
+gelsight_ros/GelsightMarkers ref_markers
+gelsight_ros/GelsightMarkers cur_markers
