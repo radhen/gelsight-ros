@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 from sensor_msgs import point_cloud2
 from sensor_msgs.msg import PointCloud2, PointField
+from std_msgs.msg import Header
 from tf.transformations import quaternion_from_euler
 
 @dataclass
@@ -18,18 +19,23 @@ class GelsightMarkers:
 
     def __post_init__(self):
         if self.rows <= 0:
-            raise ValueError(f"image width cannot be less than or equal to 0, given: {self.rows}")
-        elif self.im_height <= 0:
-            raise ValueError(f"image height cannot be less than or equal to 0, given: {self.cols}")
-        elif self.markers.shape[1] != 2:
-            raise ValueError(f"markers must have shape (n_markers, 2), given shape: {self.markers.shape}")
+            raise ValueError(f"GelsightMarkers: rows cannot be less than or equal to 0, given: {self.rows}")
+        elif self.cols <= 0:
+            raise ValueError(f"GelsightMarkers: cols cannot be less than or equal to 0, given: {self.cols}")
+        elif len(self.markers.shape) != 2 or self.markers.shape[1] != 2:
+            raise ValueError(f"GelsightMarkers: markers must have shape (n_markers, 2), given shape: {self.markers.shape}")
 
     def get_ros_msg(self) -> GelsightMarkersMsg:
-        raise NotImplementedError()
+        msg = GelsightMarkersMsg()    
+        msg.n = self.rows
+        msg.m = self.cols
+        msg.data = np.frombuffer(self.markers.tobytes(), 'float32')
+        return msg
 
     def get_ros_msg_stamped(self) -> GelsightMarkersStampedMsg:
-        raise NotImplementedError()
-    
+        msg = GelsightMarkersStampedMsg()
+        msg.markers = self.get_ros_msg()
+        return msg
 
 @dataclass
 class GelsightFlow:
@@ -42,14 +48,10 @@ class GelsightFlow:
             raise ValueError(f"Reference and current markers have different sizes")
 
     def get_ros_msg_stamped(self) -> GelsightFlowStampedMsg:
-        raise NotImplementedError()
-        # flow_msg = MarkerFlow() flow_msg.n = n
-        # flow_msg.m = m
-        # for i in range(len(Ox)):
-        #     for j in range(len(Ox[i])):
-        #         x = MATCHING_SCALE * (Cx[i][j] - Ox[i][j])
-        #         y = MATCHING_SCALE * (Cy[i][j] - Ox[i][j])
-        #         flow_msg.data.append(Vector3(x=x, y=y))
+        msg = GelsightFlowStampedMsg()
+        msg.ref_markers = self.ref.get_ros_msg()
+        msg.cur_markers = self.ref.get_ros_msg()
+        return msg 
 
 @dataclass
 class GelsightDepth:
@@ -60,18 +62,18 @@ class GelsightDepth:
 
     def __post_init__(self):
         if self.depth.shape[0] != self.im_height:
-            raise ValueError(f"Number of depth rows ({self.depth.shape[0]}) != set height ({self.im_height})")
+            raise ValueError(f"GelsightDepth: number of depth rows ({self.depth.shape[0]}) != set height ({self.im_height})")
         if self.depth.shape[1] != self.im_width:
-            raise ValueError(f"Number of depth cols ({self.depth.shape[1]}) != set width ({self.im_width})")
+            raise ValueError(f"GelsightDepth: number of depth cols ({self.depth.shape[1]}) != set width ({self.im_width})")
 
     def get_ros_msg(self, mpp: float) -> PointCloud2:
         points = [] 
         for i in range(self.im_width):
             for j in range(self.im_height):
                 points.append(
-                    ((i - (self._dm.shape[1]//2)) * mpp,
-                     (j - (self._dm.shape[0]//2)) * mpp,
-                     self._dm[j, i] / 1000.0, int(0))
+                    ((i - (self.depth.shape[1]//2)) * mpp,
+                     (j - (self.depth.shape[0]//2)) * mpp,
+                     self.depth[j, i] / 1000.0, int(0))
                 )
 
         fields = [

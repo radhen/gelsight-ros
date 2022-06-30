@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from collections import deque
+import cv2
 from find_marker import Matching
 from gelsight_ros.stream import GelsightStream
 from gelsight_ros.types import GelsightDepth, GelsightFlow, GelsightMarkers, GelsightPose
-from gelsight import gs3drecon
+import gs3drecon
 from gelsight_ros.msg import GelsightMarkersStamped as GelsightMarkersStampedMsg, \
     GelsightFlowStamped as GelsightFlowStampedMsg
 from geometry_msgs.msg import PoseStamped
@@ -14,7 +15,7 @@ from rospy import AnyMsg
 from scipy import ndimage
 from scipy.ndimage.filters import maximum_filter, minimum_filter
 from sensor_msgs.msg import PointCloud2
-from typing import Any
+from typing import Dict, Tuple, Any
 
 class GelsightProc:
     def execute() -> AnyMsg:
@@ -27,7 +28,7 @@ class MarkersProc(GelsightProc):
     threshold_neg_bias = 25
     marker_neighborhood_size = 20
 
-    def __init__(self, stream: GelsightStream, cfg: dict[str, Any]):
+    def __init__(self, stream: GelsightStream, cfg: Dict[str, Any]):
         super().__init__()
         self._stream = stream
         self._markers = None
@@ -70,10 +71,10 @@ class DepthProc(GelsightProc):
     # Parameter defaults
     compute_type: str = "cpu"
     image_mpp: float = 0.005
-    model_output_width: int = 200
-    model_output_height: int = 100
+    model_output_width: int = 120
+    model_output_height: int = 160
 
-    def __init__(self, stream: GelsightStream, cfg: dict[str, Any]):
+    def __init__(self, stream: GelsightStream, cfg: Dict[str, Any]):
         super().__init__()
         self._stream = stream
 
@@ -90,7 +91,7 @@ class DepthProc(GelsightProc):
             self.model_output_height = cfg["model_output_height"]
 
         self._model = gs3drecon.Reconstruction3D(gs3drecon.Finger.R15)
-        self._model.load_nn(cfg["depth"], self.compute_type)
+        self._model.load_nn(cfg["model_path"], self.compute_type)
         self._init_dm = None
         self._dm = None
 
@@ -103,22 +104,22 @@ class DepthProc(GelsightProc):
         dm -= self._init_dm
 
         self._dm = GelsightDepth(self.model_output_width, self.model_output_height, dm)
-        return self._dm.get_ros_msg()
+        return self._dm.get_ros_msg(self.image_mpp)
     
     def get_depth(self) -> GelsightDepth:
         return self._dm
 
     def get_mpp(self) -> float:
-        return self.mpp
+        return self.image_mpp
 
 class FlowProc(GelsightProc):
     
     # Parameter defaults
-    marker_shape: tuple[int, int] = (10, 12) 
+    marker_shape: Tuple[int, int] = (10, 12) 
     matching_fps: int = 25
     flow_scale: float = 5
 
-    def __init__(self, markers: MarkersProc, cfg: dict[str, Any]):
+    def __init__(self, markers: MarkersProc, cfg: Dict[str, Any]):
         super().__init__()
         self._markers = markers
         self._flow = None
@@ -138,11 +139,17 @@ class FlowProc(GelsightProc):
         gsmarkers = self._markers.get_markers()  
         
         self._match.init(gsmarkers.markers)
+        
         self._match.run()
         Ox, Oy, Cx, Cy, _ = self._match.get_flow()
 
-        ref_markers = GelsightMarkers(len(Oy), len(Ox), np.hstack((np.array(Ox).flatten().T, np.array(Oy).flatten().T)))
-        cur_markers = GelsightMarkers(len(Cx), len(Cy), np.hstack((np.array(Ox).flatten().T, np.array(Oy).flatten().T)))
+        # Transform into shape: (n_markers, 2)
+        Ox_t = np.reshape(np.array(Ox).flatten(), (len(Ox) * len(Ox[0]), 1))
+        Oy_t = np.reshape(np.array(Oy).flatten(), (len(Oy) * len(Oy[0]), 1))
+        ref_markers = GelsightMarkers(len(Oy), len(Ox), np.hstack((Ox_t, Oy_t)))
+        Cx_t = np.reshape(np.array(Cx).flatten(), (len(Cx) * len(Cx[0]), 1))
+        Cy_t = np.reshape(np.array(Cy).flatten(), (len(Cy) * len(Cy[0]), 1))
+        cur_markers = GelsightMarkers(len(Cy), len(Cx), np.hstack((Cx_t, Cy_t)))
 
         self._flow = GelsightFlow(ref_markers, cur_markers)
 
@@ -156,7 +163,7 @@ class PoseFromDepthProc(GelsightProc):
     # Parameter defaults
     buffer_size: int = 5
 
-    def __init__(self, depth: DepthProc, cfg: dict[str, Any]):
+    def __init__(self, depth: DepthProc, cfg: Dict[str, Any]):
         super().__init__()
         self._depth = depth
 

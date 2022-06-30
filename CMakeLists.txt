@@ -44,6 +44,9 @@ include_directories(
 
 pybind11_add_module(find_marker MODULE src/tracking_class.cpp)
 
+catkin_install_python(PROGRAMS scripts/gelsight.py scripts/vis_flow.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 install(TARGETS find_marker
   LIBRARY DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

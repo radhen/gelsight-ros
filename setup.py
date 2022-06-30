@@ -4,7 +4,8 @@ from catkin_pkg.python_setup import generate_distutils_setup
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
     packages=['gelsight_ros'],
-    scripts=['scripts/gelsight.py', 'scripts/vis_flow.py'],
-    package_dir={'': 'src'})
+    package_dir={'': 'src'},
+    requires=['gelsight', 'rospy', 'geometry_msgs']    
+)
 
 setup(**setup_args)
