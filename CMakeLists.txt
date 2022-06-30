@@ -18,7 +18,9 @@ catkin_python_setup()
 
 add_message_files(
   FILES
-  MarkerFlow.msg
+  GelsightMarkers.msg
+  GelsightMarkersStamped.msg
+  GelsightFlowStamped.msg
 )
 
 generate_messages(
@@ -40,10 +42,8 @@ include_directories(
   include/
 )
 
-catkin_install_python(PROGRAMS scripts/call_icp.py scripts/gelsight.py scripts/vis_flow.py
-                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
 pybind11_add_module(find_marker MODULE src/tracking_class.cpp)
+
 install(TARGETS find_marker
   LIBRARY DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

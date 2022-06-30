@@ -4,6 +4,11 @@ This package provides an interface for using GelSight sensors in ROS.
 
 As of right now, only R1.5 is supported.
 
+## Dependencies
+
+- \>= Python 3.8
+- [Pybind11 catkin](https://github.com/ipab-slmc/pybind11_catkin)
+
 ## Setup / Installation
 
 > \>= Python 3.8 is required to use the following script
