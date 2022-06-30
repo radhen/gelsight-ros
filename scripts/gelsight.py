@@ -2,8 +2,9 @@
 
 import gelsight_ros as gsr
 from gelsight_ros.msg import GelsightFlowStamped, GelsightMarkersStamped
+from geometry_msgs.msg import PoseStamped
 import rospy
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2 
 
 # ROS defaults
 DEFAULT_RATE = 30
@@ -51,7 +52,7 @@ if __name__ == "__main__":
             pose_cfg = rospy.get_param("~pose")
             pose_proc = gsr.PoseFromDepthProc(depth_proc, pose_cfg)
             topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
-            pose_pub = rospy.Publisher(topic_name, GelsightFlowStamped, 0)
+            pose_pub = rospy.Publisher(topic_name, PoseStamped, 0)
             gelsight_pipeline.append((pose_proc, pose_pub))
 
     # Load marker process
@@ -78,9 +79,14 @@ if __name__ == "__main__":
             for proc, pub in gelsight_pipeline:
                 try:
                     msg = proc.execute()
-                    pub.publish(msg)
+                    if msg is not None:
+                        if hasattr(msg, "header"):
+                            msg.header.frame_id = "map"
+                        pub.publish(msg)
+                except NotImplementedError:
+                    rospy.logwarn(f"Feature not implemented")
                 except Exception as e:
-                    rospy.log_err(f"Gelsight process failed: {e}")
+                    rospy.logerr(f"Gelsight process failed: {e}")
             rate.sleep()
         except rospy.ROSInterruptException:
             pass
