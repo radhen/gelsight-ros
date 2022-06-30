@@ -14,7 +14,7 @@ n_markers: 10
 m_markers: 14
 
 depth_thresh:
-  type: "exponential"
+  type: "none"
   gaussian:
     max: 10.0
     min: 2.0

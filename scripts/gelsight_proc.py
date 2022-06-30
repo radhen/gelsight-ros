@@ -109,47 +109,47 @@ if __name__ == "__main__":
                 if init_frame is None:
                     init_frame = frame
 
-                if publish_markers:
-                    markers = image2markers(frame)
-                    flow_msg = markers2flow(markers, n_markers, m_markers, (12, 5), (11, 11))
-                    marker_flow_pub.publish(flow_msg)
+                markers = image2markers(frame)
+                flow_msg = markers2flow(markers, n_markers, m_markers, (12, 5), (11, 11))
+                marker_flow_pub.publish(flow_msg)
 
-                dm = nn.get_depthmap(frame, False)
 
-                dm *= -1
-                if init_dm is None:
-                    init_dm = dm
+                if False:
+                    dm = nn.get_depthmap(frame, False)
+                    dm *= -1
+                    if init_dm is None:
+                        init_dm = dm
 
-                dm = dm - init_dm
+                    dm = dm - init_dm
 
-                pcl = depth2pcl(nn_output_width, nn_output_length, nn_mmpp, dm)
-                pcl.header.frame_id = frame_id
-                pcl_pub.publish(pcl)
+                    pcl = depth2pcl(nn_output_width, nn_output_length, nn_mmpp, dm)
+                    pcl.header.frame_id = frame_id
+                    pcl_pub.publish(pcl)
 
-                if depth_thresh_type is not None:
-                    if depth_thresh_type == ThreshType.GAUSSIAN:
-                        gauss = get_2d_gaussian(
-                            dm.shape[0], dm.shape[1], gauss_params["sig"]
-                        )
-                        thresh = dm - gauss
-                        dm[thresh > gauss_params["max"]] = 0.0
-                        dm[thresh < gauss_params["min"]] = 0.0
-                    elif depth_thresh_type == ThreshType.EXPONENTIAL:
-                        exp = get_2d_exponential(
-                            dm.shape[0], dm.shape[1], exp_params["beta"]
-                        )
-                        thresh = dm - exp
-                        dm[thresh > exp_params["max"]] = 0.0
-                        dm[thresh < exp_params["min"]] = 0.0
+                    if depth_thresh_type is not None:
+                        if depth_thresh_type == ThreshType.GAUSSIAN:
+                            gauss = get_2d_gaussian(
+                                dm.shape[0], dm.shape[1], gauss_params["sig"]
+                            )
+                            thresh = dm - gauss
+                            dm[thresh > gauss_params["max"]] = 0.0
+                            dm[thresh < gauss_params["min"]] = 0.0
+                        elif depth_thresh_type == ThreshType.EXPONENTIAL:
+                            exp = get_2d_exponential(
+                                dm.shape[0], dm.shape[1], exp_params["beta"]
+                            )
+                            thresh = dm - exp
+                            dm[thresh > exp_params["max"]] = 0.0
+                            dm[thresh < exp_params["min"]] = 0.0
 
-                pose = depth2pca(dm, nn_mmpp, pca_buffer)
-                if pose is not None:
-                    pose.header.frame_id = frame_id
-                    contact_pub.publish(pose)
+                    pose = depth2pca(dm, nn_mmpp, pca_buffer)
+                    if pose is not None:
+                        pose.header.frame_id = frame_id
+                        contact_pub.publish(pose)
 
-                    grasp_pub.publish(Float32(1.0))
-                else:
-                    grasp_pub.publish(Float32(0.0))
+                        grasp_pub.publish(Float32(1.0))
+                    else:
+                        grasp_pub.publish(Float32(0.0))
 
             rate.sleep()
         except rospy.ROSInterruptException:

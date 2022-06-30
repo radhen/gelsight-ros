@@ -5,16 +5,17 @@ import cv2
 from gelsight import gsdevice
 from gelsight_ros.util import image2markers
 from find_marker import Matching
+import time
 
-URL = "http://192.168.0.170:8080/?action=stream"
-ROI = (70, 95, 335, 390)
+URL = "http://192.168.0.171:8080/?action=stream"
+ROI = (75, 105, 345, 355)
 N = 10
-M = 14
+M = 12
 FPS = 40
-x0 = 13
-y0 = 5
-dx = 10
-dy = 10
+x0 = 7
+y0 = 10
+dx = 11.5
+dy = 12.75
 
 if __name__ == "__main__":
     dev = gsdevice.Camera(gsdevice.Finger.R15, URL)
@@ -30,22 +31,23 @@ if __name__ == "__main__":
             if init_frame is None:
                 init_frame = frame
 
-            # if init_markers is None:
-            #    init_markers = image2markers(frame) 
-            #    markers = init_markers
-            # else:
-            markers = image2markers(frame)
-            
+            if init_markers is None:
+                init_markers = image2markers(frame) 
+                markers = init_markers
+            else:
+                markers = image2markers(frame)
+
             match.init(markers)
             match.run()
             flow = match.get_flow()
 
             Ox, Oy, Cx, Cy, Occupied = flow
+
             K = 5
             for i in range(len(Ox)):
                 for j in range(len(Ox[i])):
                     pt1 = (int(Ox[i][j]), int(Oy[i][j]))
-                    pt2 = (int(Cx[i][j] + K * (Cx[i][j] - Ox[i][j])), int(Cy[i][j] + K * (Cy[i][j] - Oy[i][j])))
+                    pt2 = (int(Ox[i][j] + K * (Cx[i][j] - Ox[i][j])), int(Oy[i][j] + K * (Cy[i][j] - Oy[i][j])))
                     color = (0, 255, 255)
                     cv2.arrowedLine(frame, pt1, pt2, color, 2,  tipLength=0.2)
             

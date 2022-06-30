@@ -4,8 +4,8 @@ image_size:
 
 image_roi:
   top_left: 
-    x: 60
-    y: 100
+    x: 75
+    y: 105
   bottom_right:
-    x: 375
-    y: 380
+    x: 345
+    y: 355

@@ -8,7 +8,7 @@
     <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
     <rosparam command="load" file="$(find gelsight_ros)/config/gelsight_proc.yml"/>
 
-    <param name="cam_url" value="$(arg cam_url" />
+    <param name="cam_url" value="$(arg cam_url)" />
     <param name="use_http" value="$(arg use_http)"/>
     <param name="nn_path" value="$(find gelsight_ros)/data/nnr15.pt"/>
   </node>

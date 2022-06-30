@@ -28,7 +28,7 @@ MATCHING_SCALE = 5
 def image2markers(image):
     # Mask markers
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    mask = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 17, 25)
+    mask = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 45, 25)
 
     # # Gelsight Example Approach 
     # scaled = cv2.convertScaleAbs(gray, alpha=MARKER_INTENSITY_SCALE, beta=0)
