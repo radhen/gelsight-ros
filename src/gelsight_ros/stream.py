@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import cv2
-import gsdevice
 import numpy as np
 from typing import Tuple
+
+from .gsdevice import Camera, Finger
 
 class GelsightStream:
     def while_condition(self) -> bool:
@@ -17,7 +18,7 @@ class GelsightHTTPStream(GelsightStream):
         super().__init__() 
         self._roi = roi
 
-        self._dev = gsdevice.Camera(gsdevice.Finger.R15, url)
+        self._dev = Camera(Finger.R15, url)
         self._dev.connect()
 
     def while_condition(self) -> bool:
@@ -30,7 +31,6 @@ class GelsightHTTPStream(GelsightStream):
 class GelsightFileStream(GelsightStream):
     def __init__(self, path: str):
         super().__init__()
-        self._roi = roi
 
         self._vid = cv2.VideoCapture(path)
 

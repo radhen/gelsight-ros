@@ -10,7 +10,7 @@ import enum
 import os
 import cv2
 from scipy.interpolate import griddata
-from gelsightcore import poisson_reconstruct
+from .util import poisson_reconstruct
 
 # creating enumerations using class
 class Finger(enum.Enum):
