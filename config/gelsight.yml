@@ -4,14 +4,15 @@ file_stream:
   path: ""
 
 http_stream:
-  url: "http://192.168.0.170:8080/?action=stream"
+  url: "http://192.168.0.171:8080/?action=stream"
+  publish_image: true
   width: 480
   height: 640
   mmpp: 0.0887
-  roi_x0: 60
-  roi_y0: 100
-  roi_x1: 375
-  roi_y1: 380
+  roi_x0: 70
+  roi_y0: 120
+  roi_x1: 345
+  roi_y1: 390
 
 depth:
   enable: true
