@@ -8,7 +8,9 @@ from sensor_msgs.msg import PointCloud2
 
 # ROS defaults
 DEFAULT_RATE = 30
+DEFAULT_QUEUE_SIZE = 2
 DEFAULT_INPUT_TYPE = "http_stream"
+DEFAULT_DEPTH_METHOD = "poisson"
 DEFAULT_DEPTH_TOPIC_NAME = "depth"
 DEFAULT_MARKER_TOPIC_NAME = "markers"
 DEFAULT_FLOW_TOPIC_NAME = "markers"
@@ -43,24 +45,42 @@ if __name__ == "__main__":
     # Load depth reconstruction process
     if rospy.get_param("~depth/enable", False):
         depth_cfg = rospy.get_param("~depth")
-        depth_proc = gsr.DepthProc(stream, depth_cfg)
-        topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
-        depth_pub = rospy.Publisher(topic_name, PointCloud2, 0)
-        gelsight_pipeline.append((depth_proc, depth_pub))
+        depth_method = rospy.get_param("~depth/method", DEFAULT_DEPTH_METHOD)
+        if depth_method == "poisson":
+            depth_proc = gsr.DepthFromPoissonProc(stream, depth_cfg)
+            topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
+            depth_pub = rospy.Publisher(topic_name, PointCloud2, queue_size=DEFAULT_QUEUE_SIZE)
+            gelsight_pipeline.append((depth_proc, depth_pub))
 
-        if rospy.get_param("~pose/enable", False):
-            pose_cfg = rospy.get_param("~pose")
-            pose_proc = gsr.PoseFromDepthProc(depth_proc, pose_cfg)
-            topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
-            pose_pub = rospy.Publisher(topic_name, PoseStamped, 0)
-            gelsight_pipeline.append((pose_proc, pose_pub))
+            # Load pose process
+            if rospy.get_param("~pose/enable", False):
+                pose_cfg = rospy.get_param("~pose")
+                pose_proc = gsr.PoseFromDepthProc(depth_proc, pose_cfg)
+                topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
+                pose_pub = rospy.Publisher(topic_name, PoseStamped, queue_size=DEFAULT_QUEUE_SIZE)
+                gelsight_pipeline.append((pose_proc, pose_pub))
+        elif depth_method == "nn":
+            depth_proc = gsr.DepthFromModelProc(stream, depth_cfg)
+            topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
+            depth_pub = rospy.Publisher(topic_name, PointCloud2, queue_size=DEFAULT_QUEUE_SIZE)
+            gelsight_pipeline.append((depth_proc, depth_pub))
+
+            # Load pose process
+            if rospy.get_param("~pose/enable", False):
+                pose_cfg = rospy.get_param("~pose")
+                pose_proc = gsr.PoseFromDepthProc(depth_proc, pose_cfg)
+                topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
+                pose_pub = rospy.Publisher(topic_name, PoseStamped, queue_size=DEFAULT_QUEUE_SIZE)
+                gelsight_pipeline.append((pose_proc, pose_pub))
+        else:
+            rospy.logwarn(f"Depth method not recognized or supported: {depth_method}")
 
     # Load marker process
     if rospy.get_param("~markers/enable", False):
         marker_cfg = rospy.get_param("~markers")
         marker_proc = gsr.MarkersProc(stream, marker_cfg)
         topic_name = rospy.get_param("~markers/topic_name", DEFAULT_MARKER_TOPIC_NAME)
-        marker_pub = rospy.Publisher(topic_name, GelsightMarkersStamped, 0)
+        marker_pub = rospy.Publisher(topic_name, GelsightMarkersStamped, queue_size=DEFAULT_QUEUE_SIZE)
         gelsight_pipeline.append((marker_proc, marker_pub))
 
         # Load flow process
@@ -68,7 +88,7 @@ if __name__ == "__main__":
             flow_cfg = rospy.get_param("~flow")
             flow_proc = gsr.FlowProc(marker_proc, flow_cfg)
             topic_name = rospy.get_param("~flow/topic_name", DEFAULT_FLOW_TOPIC_NAME)
-            flow_pub = rospy.Publisher(topic_name, GelsightFlowStamped, 0)
+            flow_pub = rospy.Publisher(topic_name, GelsightFlowStamped, queue_size=DEFAULT_QUEUE_SIZE)
             gelsight_pipeline.append((flow_proc, flow_pub))
     elif rospy.get_param("~flow/enable", False):
         rospy.log_warn("Flow detection is enabled, but marker tracking is disabled. Flow will be ignored.")

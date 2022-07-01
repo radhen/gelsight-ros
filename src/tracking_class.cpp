@@ -49,29 +49,27 @@ Matching::Matching(int N_, int M_, int fps_, double x0_, double y0_, double dx_,
     cost_threshold = 15000 * (dx / 21)* (dx / 21);
 }
 
-// void Matching::init(Point_t *centers, int count){
 void Matching::init(std::vector<std::vector<double>> centers) {
     int i, j;
 
-    // read points from centers
+    // Read points from centers
     n = centers.size();
 
     for (i = 0; i < n; i++){
         C[i].x = centers[i][0];
         C[i].y = centers[i][1];
         C[i].id = i;
-        // std::cout<<C[i].x<<" "<<C[i].y<<" "<<std::endl;
     }
 
-    // init arrays for search
+    // Init arrays for search
     memset(done, 0, sizeof(done));
     memset(occupied, -1, sizeof(occupied));
     minf = -1;
 
-    // sort by x-axis, if same by y-axis
+    // Sort by x-axis, if same by y-axis
     std::sort(C, C+n);
 
-    // calculate distance and angle O(N^2M^2)
+    // Calculate pair-wise distance and angle O(N^2M^2)
     for (i = 0; i < n; i++) {
         for (j = 0; j < i; j++) {
             Dist[i][j] = dist_sqr(C[i], C[j]);
@@ -93,7 +91,6 @@ void Matching::run(){
     dfs(0, 0, missing, spare);
     for(int t=1;t<=3;t++) {
         if(minf == -1){
-            // std::cout<<"TRY AGAIN!!"<<std::endl;
             memset(done, 0, sizeof(done));
             memset(occupied, -1, sizeof(occupied));
             dfs(0, 0, missing + 1, spare + 1);
@@ -107,7 +104,6 @@ void Matching::run(){
             O[MinRow[i]][MinCol[i]].y = C[i].y;
         }
     }
-    // std::cout<<"MINF "<<minf<<"\t\t";
 }
 
 std::tuple<vvd, vvd, vvd, vvd, vvd> Matching::get_flow() {
@@ -122,7 +118,6 @@ std::tuple<vvd, vvd, vvd, vvd, vvd> Matching::get_flow() {
             Cx[i][j] = MinD[i][j].x;
             Cy[i][j] = MinD[i][j].y;
             Occupied[i][j] = MinOccupied[i][j];
-            // Point a(matcher.O[i][j].x, matcher.O[i][j].y), b(matcher.MinD[i][j].x + 2 * (matcher.MinD[i][j].x - matcher.O[i][j].x), matcher.MinD[i][j].y + 2 * (matcher.MinD[i][j].y - matcher.O[i][j].y));
         }
     }
 
@@ -247,8 +242,6 @@ double Matching::infer(){
 }
 
 void Matching::dfs(int i, double cost, int missing, int spare){
-    // if(occupied[6][0] <= -1 && occupied[7][0] <= -1)
-    // std::cout<<i<<" "<<"COST: "<<cost<<"fmin: "<< minf<< " missing "<<missing<<" spare "<<spare<<std::endl;
     if (((float)(clock()-time_st))/CLOCKS_PER_SEC >= 1.0 / fps) return;
     if(cost >= minf && minf != -1) return;
     if(cost >= cost_threshold) return;
@@ -256,16 +249,9 @@ void Matching::dfs(int i, double cost, int missing, int spare){
     double c;
     if (i >= n) {
         cost += infer();
-        // printf("\nCOST: %lf\n", cost);
-        // for (j=0;j<n;j++){
-        //     printf("%d %d \t %lf %lf\n", Row[j], Col[j], C[j].x, C[j].y);
-        // }
-        // printf("--------------------------------------------\n");
         if (cost < minf || minf == -1) {
-            // if (int(cost) == 31535) cost = 0;
             minf = cost;
             for (j=0;j<n;j++){
-                // printf("%d %d \t %lf %lf\n", Row[j], Col[j], C[j].x, C[j].y);
                 MinRow[j] = Row[j];
                 MinCol[j] = Col[j];
                 if (Row[j] < 0) continue;
@@ -285,8 +271,6 @@ void Matching::dfs(int i, double cost, int missing, int spare){
 
 
     for (j=0;j<i;j++) {
-        // if (i == 45) std::cout<<i<<" "<<j<<std::endl;
-
         if (precessor(i, j)) {
             Row[i] = Row[j];
             Col[i] = Col[j] + 1;
@@ -313,40 +297,35 @@ void Matching::dfs(int i, double cost, int missing, int spare){
     }
 
 
-    // if (count == 0) {
-        for (j=0;j<N;j++) {
-            if(done[j] == 0){
-                flag = 0;
-                for (int k = 0;k < N;k++) {
-                    // printf("%d %d %d %d\t\t", k, done[k], first[k], C[i].x);
-                    if (done[k] && 
-                        ((k < j && first[k] > C[i].y) || (k > j && first[k] < C[i].y))
-                        ){
-                        flag = 1;
-                        break;
-                    }
+    for (j=0;j<N;j++) {
+        if(done[j] == 0){
+            flag = 0;
+            for (int k = 0;k < N;k++) {
+                if (done[k] && 
+                    ((k < j && first[k] > C[i].y) || (k > j && first[k] < C[i].y))
+                    ){
+                    flag = 1;
+                    break;
                 }
-                if (flag == 1) continue;
-                done[j] = 1;
-                first[j] = C[i].y;
-                Row[i] = j;
-                Col[i] = 0;
-
-                occupied[Row[i]][Col[i]] = i;
-                c = calc_cost(i);
-
-                dfs(i+1, cost+c, missing, spare);
-                done[j] = 0;
-                occupied[Row[i]][Col[i]] = -1;
             }
-        }
-    // }
+            if (flag == 1) continue;
+            done[j] = 1;
+            first[j] = C[i].y;
+            Row[i] = j;
+            Col[i] = 0;
 
-    // considering missing points
-    // if (C[i].y > dy && C[i].y < O[0][M-1].y - dy / 2) return;
+            occupied[Row[i]][Col[i]] = i;
+            c = calc_cost(i);
+
+            dfs(i+1, cost+c, missing, spare);
+            done[j] = 0;
+            occupied[Row[i]][Col[i]] = -1;
+        }
+    }
+
+    // Considering missing points
     for(m=1;m<=missing;m++){
         for (j=0;j<N;j++) {
-            // if (j >= 1 && j < N - 1) continue;
             if(fabs(C[i].y - O[j][0].y) > moving_max) continue;
             for(k=M-1;k>=0;k--) if(occupied[j][k]>-1) break;
             if(k+m+1>=M) continue;
@@ -368,8 +347,6 @@ void Matching::dfs(int i, double cost, int missing, int spare){
         dfs(i+1, cost, missing, spare-1);
     }
 }
-
-
 
 std::tuple<double, double> Matching::test() {
     return std::make_tuple(dx, dy);
