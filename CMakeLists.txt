@@ -17,6 +17,7 @@ find_package(OpenCV REQUIRED)
 catkin_python_setup()
 
 add_message_files(
+  DIRECTORY msg
   FILES
   GelsightMarkers.msg
   GelsightMarkersStamped.msg
@@ -45,11 +46,8 @@ include_directories(
 catkin_install_python(PROGRAMS scripts/call_icp.py scripts/gelsight.py scripts/vis_flow.py scripts/record.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-pybind11_add_module(find_marker MODULE src/tracking_class.cpp)
-
-catkin_install_python(PROGRAMS scripts/gelsight.py scripts/vis_flow.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+pybind_add_module(find_marker MODULE src/tracking_class.cpp)
 
 install(TARGETS find_marker
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
