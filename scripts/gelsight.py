@@ -14,7 +14,8 @@ DEFAULT_INPUT_TYPE = "http_stream"
 DEFAULT_DEPTH_METHOD = "poisson"
 DEFAULT_DEPTH_TOPIC_NAME = "depth"
 DEFAULT_MARKER_TOPIC_NAME = "markers"
-DEFAULT_FLOW_TOPIC_NAME = "markers"
+DEFAULT_FLOW_TOPIC_NAME = "flow"
+DEFAULT_FLOW_IMAGE_TOPIC_NAME = "flow_image"
 DEFAULT_POSE_TOPIC_NAME = "pose"
 
 if __name__ == "__main__":
@@ -97,6 +98,12 @@ if __name__ == "__main__":
             topic_name = rospy.get_param("~flow/topic_name", DEFAULT_FLOW_TOPIC_NAME)
             flow_pub = rospy.Publisher(topic_name, GelsightFlowStamped, queue_size=DEFAULT_QUEUE_SIZE)
             gelsight_pipeline.append((flow_proc, flow_pub))
+
+            if rospy.get_param("~flow/publish_image", False):
+                flow_im_proc = gsr.DrawFlowProc(stream, flow_proc)
+                flow_im_pub = rospy.Publisher(flow_image, Image, queue_size=DEFAULT_QUEUE_SIZE)
+                gelsight_pipeline.append((flow_im_proc, flow_im_pub))
+    
     elif rospy.get_param("~flow/enable", False):
         rospy.log_warn("Flow detection is enabled, but marker tracking is disabled. Flow will be ignored.")
 

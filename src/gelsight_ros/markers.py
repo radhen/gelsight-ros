@@ -147,40 +147,25 @@ class DrawFlowProc(GelsightProc):
     execute() -> Image msg 
     """
 
+    encoding: str = "bgr8"
+    arrow_color: Tuple[int, int, int] = (0, 255, 0)
+    arrow_thickness: int = 2
+    arrow_scale: int = 5
+
     def __init__(self, stream: GelsightStream, flow: FlowProc, cfg: Dict[str, Any]):
         super().__init__()
         self._stream: GelsightStream = stream
-        self._markers: Optional[GelsightMarkers] = None
+        self._flow: FlowProc = flow
 
-        if "threshold_block_size" in cfg:
-            self.threshold_block_size = cfg["threshold_block_size"]
-        if "threshold_neg_bias" in cfg:
-            self.threshold_neg_bias = cfg["threshold_neg_bias"]
-        if "marker_neighborhood_size" in cfg:
-            self.marker_neighborhood_size = cfg["marker_neighborhood_size"]
+    def execute(self) -> Image:
+        frame = self._stream.get_frame()
+        flow = self._flow.get_flow()
 
-    def execute(self) -> GelsightMarkersStampedMsg:
-        # Threshold image to mask markers 
-        im = self._stream.get_frame()
-        gray_im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
-        im_mask = cv2.adaptiveThreshold(gray_im, 255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,
-            self.threshold_block_size, self.threshold_neg_bias)
+        for i in range(flow.ref.markers.shape[0]):
+            p0 = (flow.ref.markers.data[i][0], flow.ref.markers.data[i][1])
+            p1 = (((flow.cur.markers.data[i][0] - p0) * self.arrow_scale) + p0,
+                  ((flow.cur.markers.data[i][1] - p0) * self.arrow_scale) + p0)
+            frame = cv2.arrowedLine(frame, p0, p1,
+                self.arrow_color, self.arrow_thickness)
 
-        # Find peaks
-        max = maximum_filter(im_mask, self.marker_neighborhood_size)
-        maxima = im_mask == max
-        min = minimum_filter(im_mask, self.marker_neighborhood_size)
-        diff = (max - min) > 1
-        maxima[diff == 0] = 0
-
-        labeled, n = ndimage.label(maxima)
-        xy = np.array(ndimage.center_of_mass(im_mask, labeled, range(1, n + 1)))
-        xy[:, [0, 1]] = xy[:, [1, 0]]
-
-        # Convert to gelsight dataclass
-        self._markers = GelsightMarkers(im.shape[1], im.shape[0], xy)
-        return self._markers.get_ros_msg_stamped()
-
-    def get_markers(self) -> Optional[GelsightMarkers]:
-        return self._markers
+        return CvBridge().cv2_to_imgmsg(frame, self.encoding)

@@ -4,7 +4,7 @@ file_stream:
   path: ""
 
 http_stream:
-  url: "http://192.168.0.170:8080/?action=stream"
+  url: "http://192.168.0.171:8080/?action=stream"
   publish_image: true
   width: 480
   height: 640
@@ -15,7 +15,7 @@ http_stream:
   roi_y1: 390
 
 depth:
-  enable: true
+  enable: false
   topic_name: "depth"
   compute_type: "cuda" # Either 'cuda' or 'cpu'
 
@@ -26,6 +26,7 @@ markers:
 flow:
   enable: true
   topic_name: "flow"
+  publish_image: true
   n: 0
   m: 0 
   x0: 0
@@ -34,7 +35,7 @@ flow:
   dy: 0
 
 pose:
-  enable: true
+  enable: false
   topic_name: "pose"
   method: "depth" # Either 'markers' or 'depth'
   rolling_avg: 1 # Must be 1 or greater

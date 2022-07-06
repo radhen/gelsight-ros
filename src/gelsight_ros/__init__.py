@@ -2,5 +2,5 @@
 
 from .proc import GelsightProc, ImageProc
 from .depth import DepthProc, DepthFromModelProc, DepthFromPoissonProc, PoseFromDepthProc
-from .markers import MarkersProc, FlowProc
+from .markers import MarkersProc, FlowProc, DrawFlowProc
 from .stream import GelsightStream, GelsightHTTPStream, GelsightFileStream
