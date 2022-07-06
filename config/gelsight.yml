@@ -14,17 +14,17 @@ http_stream:
   roi_y1: 380
 
 depth:
-  enabled: true
-  topic_name: ""
+  enable: true
+  topic_name: "depth"
   compute_type: "cuda" # Either 'cuda' or 'cpu'
 
 markers:
-  enabled: true
-  topic_name: ""
+  enable: true
+  topic_name: "markers"
 
 flow:
-  enabled: true
-  topic_name: ""
+  enable: true
+  topic_name: "flow"
   n: 0
   m: 0 
   x0: 0
@@ -33,7 +33,7 @@ flow:
   dy: 0
 
 pose:
-  enabled: true
-  topic_name: ""
-  method: "markers" # Either 'markers' or 'depth'
+  enable: true
+  topic_name: "pose"
+  method: "depth" # Either 'markers' or 'depth'
   rolling_avg: 1 # Must be 1 or greater
