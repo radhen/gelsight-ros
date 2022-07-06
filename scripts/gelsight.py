@@ -4,11 +4,12 @@ import gelsight_ros as gsr
 from gelsight_ros.msg import GelsightFlowStamped, GelsightMarkersStamped
 from geometry_msgs.msg import PoseStamped
 import rospy
-from sensor_msgs.msg import PointCloud2 
+from sensor_msgs.msg import PointCloud2, Image
 
 # ROS defaults
 DEFAULT_RATE = 30
 DEFAULT_QUEUE_SIZE = 2
+DEFAULT_IMAGE_TOPIC_NAME = "raw"
 DEFAULT_INPUT_TYPE = "http_stream"
 DEFAULT_DEPTH_METHOD = "poisson"
 DEFAULT_DEPTH_TOPIC_NAME = "depth"
@@ -35,6 +36,12 @@ if __name__ == "__main__":
             rospy.signal_shutdown("Missing one of the roi corners. Please check http_stream/roi_X.")
         roi = (http_cfg["roi_x0"], http_cfg["roi_y0"], http_cfg["roi_x1"], http_cfg["roi_y1"])
         stream = gsr.GelsightHTTPStream(http_cfg["url"], roi)
+
+        if "publish_image" in http_cfg and http_cfg["publish_image"]:
+            image_proc = gsr.ImageProc(stream)
+            image_pub = rospy.Publisher(DEFAULT_IMAGE_TOPIC_NAME, Image, queue_size=DEFAULT_QUEUE_SIZE)
+            gelsight_pipeline.append((image_proc, image_pub))
+
     elif input_type == "file_stream":
         if not rospy.has_param("~file_stream/path"):
             rospy.signal_shutdown("No file path provided, but 'file_stream' input selected. Please set file_stream/path.")
