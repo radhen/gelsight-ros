@@ -4,7 +4,7 @@ file_stream:
   path: ""
 
 http_stream:
-  url: "http://192.168.0.171:8080/?action=stream"
+  url: "http://192.168.0.170:8080/?action=stream"
   publish_image: true
   width: 480
   height: 640
