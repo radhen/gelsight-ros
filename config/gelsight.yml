@@ -22,11 +22,15 @@ depth:
 markers:
   enable: true
   topic_name: "markers"
+  publish_image: true
+  threshold_block_size: 11
+  threshold_neg_bias: 15
+  marker_neighborhood_size: 20
 
 flow:
   enable: true
   topic_name: "flow"
-  publish_image: true
+  publish_image: false
   n: 0
   m: 0 
   x0: 0

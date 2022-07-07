@@ -14,6 +14,7 @@ DEFAULT_INPUT_TYPE = "http_stream"
 DEFAULT_DEPTH_METHOD = "poisson"
 DEFAULT_DEPTH_TOPIC_NAME = "depth"
 DEFAULT_MARKER_TOPIC_NAME = "markers"
+DEFAULT_MARKER_IMAGE_TOPIC_NAME = "marker_image"
 DEFAULT_FLOW_TOPIC_NAME = "flow"
 DEFAULT_FLOW_IMAGE_TOPIC_NAME = "flow_image"
 DEFAULT_POSE_TOPIC_NAME = "pose"
@@ -67,6 +68,7 @@ if __name__ == "__main__":
                 topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
                 pose_pub = rospy.Publisher(topic_name, PoseStamped, queue_size=DEFAULT_QUEUE_SIZE)
                 gelsight_pipeline.append((pose_proc, pose_pub))
+
         elif depth_method == "nn":
             depth_proc = gsr.DepthFromModelProc(stream, depth_cfg)
             topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
@@ -91,6 +93,11 @@ if __name__ == "__main__":
         marker_pub = rospy.Publisher(topic_name, GelsightMarkersStamped, queue_size=DEFAULT_QUEUE_SIZE)
         gelsight_pipeline.append((marker_proc, marker_pub))
 
+        if rospy.get_param("~markers/publish_image", False):
+            marker_im_proc = gsr.DrawMarkersProc(stream, marker_proc)
+            marker_im_pub = rospy.Publisher(DEFAULT_MARKER_IMAGE_TOPIC_NAME, Image, queue_size=DEFAULT_QUEUE_SIZE)
+            gelsight_pipeline.append((marker_im_proc, marker_im_pub))
+
         # Load flow process
         if rospy.get_param("~flow/enable", False):
             flow_cfg = rospy.get_param("~flow")
@@ -101,7 +108,7 @@ if __name__ == "__main__":
 
             if rospy.get_param("~flow/publish_image", False):
                 flow_im_proc = gsr.DrawFlowProc(stream, flow_proc)
-                flow_im_pub = rospy.Publisher(flow_image, Image, queue_size=DEFAULT_QUEUE_SIZE)
+                flow_im_pub = rospy.Publisher(DEFAULT_FLOW_IMAGE_TOPIC_NAME, Image, queue_size=DEFAULT_QUEUE_SIZE)
                 gelsight_pipeline.append((flow_im_proc, flow_im_pub))
     
     elif rospy.get_param("~flow/enable", False):
@@ -118,9 +125,9 @@ if __name__ == "__main__":
                             msg.header.frame_id = "map"
                         pub.publish(msg)
                 except NotImplementedError:
-                    rospy.logwarn(f"Feature not implemented")
+                    rospy.logwarn(f"{proc.__class__.__name__}: Feature not implemented")
                 except Exception as e:
-                    rospy.logerr(f"Gelsight process failed: {e}")
+                    rospy.logerr(f"{proc.__class__.__name__}: Exception occured: {e}")
             rate.sleep()
         except rospy.ROSInterruptException:
             pass
