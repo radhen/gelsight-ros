@@ -72,7 +72,6 @@ class DepthFromModelProc(DepthProc):
         self._dm: Optional[GelsightDepth] = None
 
     def execute(self) -> PointCloud2:
-        # Compute depth map 
         dm = self._model.get_depthmap(self._stream.get_frame(), False)
         dm *= -1
         if self._init_dm is None:
@@ -131,11 +130,12 @@ class DepthFromPoissonProc(DepthProc):
         return poisson_reconstruct(dy, dx, zeros)
 
     def execute(self) -> PointCloud2:
+        # Get current and initial frame 
         frame = self._stream.get_frame()
         if self._init_frame is None:
             self._init_frame = frame
 
-        # Compute depth map 
+        # Compute depth map using solver method
         dm = self.img2depth(frame)        
         # dm *= -1
         if self._init_dm is None:
