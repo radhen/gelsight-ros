@@ -29,7 +29,7 @@ class GelsightMarkers:
         msg = GelsightMarkersMsg()    
         msg.n = self.rows
         msg.m = self.cols
-        msg.data = np.frombuffer(self.markers.tobytes(), 'float32')
+        msg.data = self.markers.astype('float32').flatten(order='C') # Row major
         return msg
 
     def get_ros_msg_stamped(self) -> GelsightMarkersStampedMsg:

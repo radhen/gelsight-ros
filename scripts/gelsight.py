@@ -55,6 +55,8 @@ if __name__ == "__main__":
     if rospy.get_param("~depth/enable", False):
         depth_cfg = rospy.get_param("~depth")
         depth_method = rospy.get_param("~depth/method", DEFAULT_DEPTH_METHOD)
+
+        # Compute depth only using poisson approx
         if depth_method == "poisson":
             depth_proc = gsr.DepthFromPoissonProc(stream, depth_cfg)
             topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
@@ -68,7 +70,8 @@ if __name__ == "__main__":
                 topic_name = rospy.get_param("~pose/topic_name", DEFAULT_POSE_TOPIC_NAME)
                 pose_pub = rospy.Publisher(topic_name, PoseStamped, queue_size=DEFAULT_QUEUE_SIZE)
                 gelsight_pipeline.append((pose_proc, pose_pub))
-
+        
+        # Compute depth using neural-network 
         elif depth_method == "nn":
             depth_proc = gsr.DepthFromModelProc(stream, depth_cfg)
             topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
