@@ -18,6 +18,7 @@ depth:
   enable: false
   topic_name: "depth"
   compute_type: "cuda" # Either 'cuda' or 'cpu'
+  model_path: $(find gelsight_ros)/data/nnr15.pt
 
 markers:
   enable: true
