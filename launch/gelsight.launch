@@ -1,6 +1,6 @@
 <launch>
+  <arg name="config" default="$(find gelsight_ros)/config/gelsight.yml" />
   <node name="gelsight" type="gelsight.py" pkg="gelsight_ros" output="screen">
-    <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
-    <param name="depth/model_path" value="$(find gelsight_ros)/data/nnr15.pt"/>
+    <rosparam command="load" file="$(arg config)" subst_value="true"/>
   </node>
 </launch>
