@@ -44,6 +44,11 @@ if __name__ == "__main__":
             image_pub = rospy.Publisher(DEFAULT_IMAGE_TOPIC_NAME, Image, queue_size=DEFAULT_QUEUE_SIZE)
             gelsight_pipeline.append((image_proc, image_pub))
 
+        if True:
+            image_diff_proc = gsr.ImageDiffProc(stream)
+            image_diff_pub = rospy.Publisher("/diff", Image, queue_size=DEFAULT_QUEUE_SIZE)
+            gelsight_pipeline.append((image_diff_proc, image_diff_pub))
+
     elif input_type == "file_stream":
         if not rospy.has_param("~file_stream/path"):
             rospy.signal_shutdown("No file path provided, but 'file_stream' input selected. Please set file_stream/path.")
@@ -87,6 +92,8 @@ if __name__ == "__main__":
                 gelsight_pipeline.append((pose_proc, pose_pub))
         else:
             rospy.logwarn(f"Depth method not recognized or supported: {depth_method}")
+    elif rospy.get_param("~pose/enable", False):
+        rospy.logwarn("Pose detection is enabled, but depth computing is disabled. Pose will be ignored.")
 
     # Load marker process
     if rospy.get_param("~markers/enable", False):
@@ -115,7 +122,7 @@ if __name__ == "__main__":
                 gelsight_pipeline.append((flow_im_proc, flow_im_pub))
     
     elif rospy.get_param("~flow/enable", False):
-        rospy.log_warn("Flow detection is enabled, but marker tracking is disabled. Flow will be ignored.")
+        rospy.logwarn("Flow detection is enabled, but marker tracking is disabled. Flow will be ignored.")
 
     # Main loop
     while not rospy.is_shutdown() and stream.while_condition:

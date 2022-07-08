@@ -15,28 +15,28 @@ http_stream:
   roi_y1: 390
 
 depth:
-  enable: false
+  enable: true
   topic_name: "depth"
   compute_type: "cuda" # Either 'cuda' or 'cpu'
 
 markers:
-  enable: true
+  enable: false
   topic_name: "markers"
   publish_image: true
-  threshold_block_size: 11
-  threshold_neg_bias: 15
-  marker_neighborhood_size: 20
+  threshold_block_size: 31
+  threshold_neg_bias: 19
+  marker_neighborhood_size: 24
 
 flow:
-  enable: true
+  enable: false
   topic_name: "flow"
-  publish_image: false
-  n: 0
-  m: 0 
-  x0: 0
-  y0: 0
-  dx: 0
-  dy: 0
+  publish_image: true
+  n: 10
+  m: 14
+  x0: 13
+  y0: 6
+  dx: 11
+  dy: 11
 
 pose:
   enable: false

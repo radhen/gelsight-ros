@@ -41,3 +41,29 @@ class ImageProc(GelsightProc):
     def execute(self) -> Image:
         frame = self._stream.get_frame()
         return CvBridge().cv2_to_imgmsg(frame, self.encoding)
+
+class ImageDiffProc(GelsightProc):
+    """
+    Computes pixel-diff from initial frame in stream.
+
+    execute() -> Image msg
+    """
+
+    # Parameter defaults
+    encoding = "8UC3"
+
+    def __init__(self, stream: GelsightStream):
+        super().__init__()
+        self._stream: GelsightStream = stream
+        self._init_frame: Optional[np.ndarray] = None
+
+    def execute(self) -> Image:
+        frame = self._stream.get_frame()
+        if self._init_frame is None:
+            self._init_frame = frame
+
+        diff = ((frame * 1.0) - self._init_frame) * 4 + 127
+        diff[diff > 255] = 255
+        diff[diff < 0] = 0
+        
+        return CvBridge().cv2_to_imgmsg(np.uint8(diff), self.encoding)
