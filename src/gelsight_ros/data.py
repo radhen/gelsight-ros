@@ -50,7 +50,7 @@ class GelsightFlow:
     def get_ros_msg_stamped(self) -> GelsightFlowStampedMsg:
         msg = GelsightFlowStampedMsg()
         msg.ref_markers = self.ref.get_ros_msg()
-        msg.cur_markers = self.ref.get_ros_msg()
+        msg.cur_markers = self.cur.get_ros_msg()
         return msg 
 
 @dataclass

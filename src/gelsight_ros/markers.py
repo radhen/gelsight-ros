@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+TODO:
+ - Move FlowProc marker shape to MarkerProc
+ - Process marker shape from config
+"""
+
 from collections import deque
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -96,7 +102,7 @@ class FlowProc(GelsightProc):
 
 
     # Parameter defaults
-    marker_shape: Tuple[int, int] = (10, 12) 
+    marker_shape: Tuple[int, int] = (14, 10) 
     matching_fps: int = 25
     flow_scale: float = 5
 
@@ -127,10 +133,10 @@ class FlowProc(GelsightProc):
             # Transform into shape: (n_markers, 2)
             Ox_t = np.reshape(np.array(Ox).flatten(), (len(Ox) * len(Ox[0]), 1))
             Oy_t = np.reshape(np.array(Oy).flatten(), (len(Oy) * len(Oy[0]), 1))
-            ref_markers = GelsightMarkers(len(Oy), len(Ox), np.hstack((Ox_t, Oy_t)))
+            ref_markers = GelsightMarkers(self.marker_shape[0], self.marker_shape[1], np.hstack((Ox_t, Oy_t)))
             Cx_t = np.reshape(np.array(Cx).flatten(), (len(Cx) * len(Cx[0]), 1))
             Cy_t = np.reshape(np.array(Cy).flatten(), (len(Cy) * len(Cy[0]), 1))
-            cur_markers = GelsightMarkers(len(Cy), len(Cx), np.hstack((Cx_t, Cy_t)))
+            cur_markers = GelsightMarkers(self.marker_shape[0], self.marker_shape[1], np.hstack((Cx_t, Cy_t)))
 
             self._flow = GelsightFlow(ref_markers, cur_markers)
 
@@ -193,9 +199,9 @@ class DrawFlowProc(GelsightProc):
             return None
 
         for i in range(flow.ref.markers.data.shape[0]):
-            p0 = (flow.ref.markers.data[i, 0], flow.ref.markers.data[i, 1])
-            p1 = (((flow.cur.markers.data[i, 0] - p0) * self.arrow_scale) + p0,
-                  ((flow.cur.markers.data[i, 1] - p0) * self.arrow_scale) + p0)
+            p0 = (int(flow.ref.markers.data[i, 0]), int(flow.ref.markers.data[i, 1]))
+            p1 = (int(((flow.cur.markers.data[i, 0] - p0[0]) * self.arrow_scale) + p0[0]),
+                  int(((flow.cur.markers.data[i, 1] - p0[1]) * self.arrow_scale) + p0[1]))
             frame = cv2.arrowedLine(frame, p0, p1,
                 self.arrow_color, self.arrow_thickness)
 
