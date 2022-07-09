@@ -1,0 +1,11 @@
+<launch>
+  <arg name="input_path"/>
+  <arg name="output_path" default="$(find gelsight_ros)/data"/>
+  <arg name="ball_radius"/>
+
+  <node name="label_data" type="label_data.py" pkg="gelsight_ros" output="screen">
+    <param name="input_path" value="$(arg input_path)"/>
+    <param name="output_path" value="$(arg output_path)"/>
+    <param name="ball_radius" value="$(arg ball_radius)"/>
+  </node>
+</launch>
