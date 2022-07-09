@@ -7,6 +7,7 @@ TODO:
 """
 
 from collections import deque
+import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from find_marker import Matching
@@ -105,11 +106,13 @@ class FlowProc(GelsightProc):
     marker_shape: Tuple[int, int] = (14, 10) 
     matching_fps: int = 25
     flow_scale: float = 5
+    error_threshold: float = -50
 
     def __init__(self, markers: MarkersProc, cfg: Dict[str, Any]):
         super().__init__()
         self._markers: MarkersProc = markers
         self._flow: Optional[GelsightFlow] = None
+        self._cfg: Dict[str, Any] = cfg
 
         if not all(param in cfg for param in ["x0", "y0", "dx", "dy"]):
             raise RuntimeError("FlowProc: Missing marker configuration.")
@@ -120,6 +123,13 @@ class FlowProc(GelsightProc):
         self._match = Matching(
             self.marker_shape[0], self.marker_shape[1],
             self.matching_fps, cfg["x0"], cfg["y0"], cfg["dx"], cfg["dy"]
+        )
+    
+    def reset_matching(self):
+        del self._match
+        self._match = Matching(
+            self.marker_shape[0], self.marker_shape[1],
+            self.matching_fps, self._cfg["x0"], self._cfg["y0"], self._cfg["dx"], self._cfg["dy"]
         )
 
     def execute(self) -> GelsightFlowStampedMsg:
@@ -139,7 +149,11 @@ class FlowProc(GelsightProc):
             cur_markers = GelsightMarkers(self.marker_shape[0], self.marker_shape[1], np.hstack((Cx_t, Cy_t)))
 
             self._flow = GelsightFlow(ref_markers, cur_markers)
-
+            vec_field = self._flow.cur.markers - self._flow.ref.markers
+            if np.mean(vec_field) <= self.error_threshold: # hack to determine if calibration is incorrect
+                rospy.logwarn('Marker flow is uncalibrated! Ensure all markers are detected in /marker_image')
+                self.reset_matching()
+                return
             return self._flow.get_ros_msg_stamped()
 
     def get_flow(self) -> Optional[GelsightFlow]:
