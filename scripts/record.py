@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Collects a sequence of images from the sensor.
+
+Stream configured in config/gelsight.yml
+"""
+
 import cv2
 import gelsight_ros as gsr
 import os
@@ -40,11 +46,14 @@ if __name__ == "__main__":
     stream = gsr.GelsightHTTPStream(cfg["url"], roi)
     
     # Main loop
+    i = 0
     while not rospy.is_shutdown() and stream.while_condition and rospy.Time.now() < end_time:
         try:
             frame = stream.get_frame()
-            if not cv2.imwrite(f"{output_path}/gelsight-{rospy.Time.now()}.jpg", frame):
+            if not cv2.imwrite(f"{output_path}/{i}.jpg", frame):
                 rospy.logwarn(f"Failed to write file to {output_path}")
+            else:
+                i += 1
             rate.sleep()
         except rospy.ROSInterruptException:
             pass

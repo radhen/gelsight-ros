@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Runs main pipeline for gelsight inference.
+
+Stream and processes configured in config/gelsight.yml
+"""
+
 import gelsight_ros as gsr
 from gelsight_ros.msg import GelsightFlowStamped, GelsightMarkersStamped
 from geometry_msgs.msg import PoseStamped

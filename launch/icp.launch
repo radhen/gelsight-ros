@@ -1,8 +1,0 @@
-<launch>
-    <rosparam file="$(find mars_config)/config/mesh.yml" command="load" subst_value="true"/>
-    <node name="icp_server" type="icp_server" pkg="mars_perception" output="screen">
-        <rosparam file="$(find mars_config)/config/object_registration.yml" command="load"/>
-        <param name="max_iterations"  value="100" />
-    </node>
-
-</launch>
