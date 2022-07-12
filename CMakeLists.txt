@@ -43,7 +43,9 @@ include_directories(
   include/
 )
 
-catkin_install_python(PROGRAMS scripts/gelsight.py scripts/label_data.py scripts/record.py
+catkin_install_python(PROGRAMS scripts/gelsight.py scripts/label_data.py
+                        scripts/record.py scripts/plot_grad.py scripts/get_mpp.py
+                        scripts/train.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 pybind_add_module(find_marker MODULE src/tracking_class.cpp)

@@ -1,0 +1,9 @@
+<launch>
+  <arg name="input_path" default="$(find gelsight_ros)/data/gelsight-depth-dataset.csv"/>
+  <arg name="output_path" default="$(find gelsight_ros)/data"/>
+
+  <node name="train" type="train.py" pkg="gelsight_ros" output="screen">
+    <param name="input_path" value="$(arg input_path)"/>
+    <param name="output_path" value="$(arg output_path)"/>
+  </node>
+</launch>

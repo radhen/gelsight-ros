@@ -13,12 +13,16 @@ import rospy
 
 DEFAULT_RATE = 30
 DEFAULT_DURATION = 30
+DEFAULT_NUM_IMGS = 5000
 
 if __name__ == "__main__":
     rospy.init_node("record")
     rate = rospy.Rate(rospy.get_param("~rate", DEFAULT_RATE))
     end_time = rospy.Time.now() + rospy.Duration(rospy.get_param("~num_secs", DEFAULT_DURATION))
-    
+    num_imgs = rospy.get_param("~num_imgs")
+    if num_imgs == -1:
+        num_imgs = DEFAULT_NUM_IMGS
+
     if not rospy.has_param("~output_path"):
         rospy.signal_shutdown("No output path provided. Please set output_path/.")
     output_path = rospy.get_param("~output_path")
@@ -47,7 +51,8 @@ if __name__ == "__main__":
     
     # Main loop
     i = 0
-    while not rospy.is_shutdown() and stream.while_condition and rospy.Time.now() < end_time:
+    while not rospy.is_shutdown() and stream.while_condition and \
+        rospy.Time.now() < end_time and i < num_imgs:
         try:
             frame = stream.get_frame()
             if not cv2.imwrite(f"{output_path}/{i}.jpg", frame):

@@ -1,0 +1,7 @@
+<launch>
+  <arg name="input_path"/>
+
+  <node name="plot_grad" type="plot_grad.py" pkg="gelsight_ros" output="screen">
+    <param name="input_path" value="$(arg input_path)"/>
+  </node>
+</launch>

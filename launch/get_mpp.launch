@@ -1,0 +1,9 @@
+<launch>
+  <arg name="input_path" default="$(find gelsight_ros)/data/mpp.jpg"/>
+  <arg name="dist" default="0.01005"/>
+
+  <node name="get_mpp" type="get_mpp.py" pkg="gelsight_ros" output="screen">
+    <param name="input_path" value="$(arg input_path)"/>
+    <param name="dist" value="$(arg dist)"/>
+  </node>
+</launch>

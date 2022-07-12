@@ -11,6 +11,7 @@ from gelsight_ros.msg import GelsightFlowStamped, GelsightMarkersStamped
 from geometry_msgs.msg import PoseStamped
 import rospy
 from sensor_msgs.msg import PointCloud2, Image
+import traceback
 
 # ROS defaults
 DEFAULT_RATE = 30
@@ -84,7 +85,7 @@ if __name__ == "__main__":
         
         # Compute depth using neural-network 
         elif depth_method == "nn":
-            depth_proc = gsr.DepthFromModelProc(stream, depth_cfg)
+            depth_proc = gsr.DepthFromCustomModelProc(stream, depth_cfg)
             topic_name = rospy.get_param("~depth/topic_name", DEFAULT_DEPTH_TOPIC_NAME)
             depth_pub = rospy.Publisher(topic_name, PointCloud2, queue_size=DEFAULT_QUEUE_SIZE)
             gelsight_pipeline.append((depth_proc, depth_pub))
@@ -143,7 +144,7 @@ if __name__ == "__main__":
                 except NotImplementedError:
                     rospy.logwarn(f"{proc.__class__.__name__}: Feature not implemented")
                 except Exception as e:
-                    rospy.logerr(f"{proc.__class__.__name__}: Exception occured: {e}")
+                    rospy.logerr(f"{proc.__class__.__name__}: Exception occured: {traceback.format_exc()}")
             rate.sleep()
         except rospy.ROSInterruptException:
             pass

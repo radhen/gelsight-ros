@@ -1,10 +1,12 @@
 <launch>
   <arg name="output_path"/>
   <arg name="num_secs" default="30"/>
+  <arg name="num_imgs" default="-1"/>
 
   <node name="record" type="record.py" pkg="gelsight_ros" output="screen">
     <rosparam command="load" file="$(find gelsight_ros)/config/gelsight.yml"/>
     <param name="output_path" value="$(arg output_path)"/>
     <param name="num_secs" value="$(arg num_secs)"/>
+    <param name="num_imgs" value="$(arg num_imgs)"/>
   </node>
 </launch>

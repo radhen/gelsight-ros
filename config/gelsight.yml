@@ -17,6 +17,7 @@ http_stream:
 depth:
   enable: true
   topic_name: "depth"
+  method: "nn"
   compute_type: "cuda" # Either 'cuda' or 'cpu'
 
 markers:

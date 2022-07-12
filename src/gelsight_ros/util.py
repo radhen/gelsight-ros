@@ -49,8 +49,7 @@ def erode(img, ksize=5):
     return cv2.erode(img, kernel, iterations=1)
 
 def demark(img, gx, gy):
-
-    gray_im = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray_im = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     im_mask = cv2.adaptiveThreshold(gray_im, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,
         17, 25)
